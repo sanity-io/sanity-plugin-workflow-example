@@ -42,6 +42,6 @@ export type Metadata = SanityDocumentLike & {
   state: string
 }
 
-export type ItemWithMetadata = SanityDocumentLike & {
+export type SanityDocumentWithMetadata = SanityDocumentLike & {
   _metadata: Metadata
 }

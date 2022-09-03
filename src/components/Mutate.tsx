@@ -18,29 +18,36 @@ export default function Mutate(props: MutateProps) {
 
   const toast = useToast()
 
-  if (isDraft && state.publish && !ops.publish.disabled) {
-    ops.publish.execute()
+  if (isDraft && state.publish) {
+    if (!ops.publish.disabled) {
+      ops.publish.execute()
+      onComplete(_id)
+      toast.push({
+        title: 'Published Document',
+        description: documentId,
+        status: 'success',
+      })
+    }
+  } else if (!isDraft && state.unpublish) {
+    if (!ops.unpublish.disabled) {
+      ops.unpublish.execute()
+      onComplete(_id)
+      toast.push({
+        title: 'Unpublished Document',
+        description: documentId,
+        status: 'success',
+      })
+    }
+  } else {
+    // Clean up if it's not going to un/publish
     onComplete(_id)
-    toast.push({
-      title: 'Published Document',
-      description: documentId,
-      status: 'success',
-    })
-  } else if (!isDraft && state.unpublish && !ops.unpublish.disabled) {
-    ops.unpublish.execute()
-    onComplete(_id)
-    toast.push({
-      title: 'Unpublished Document',
-      description: documentId,
-      status: 'success',
-    })
   }
 
-  return null
+  // return null
 
-  //   return (
-  //     <Card padding={3} shadow={2} tone="primary">
-  //       Mutating: {_id} to {state.title}
-  //     </Card>
-  //   )
+  return (
+    <Card padding={3} shadow={2} tone="primary">
+      Mutating: {_id} to {state.title}
+    </Card>
+  )
 }

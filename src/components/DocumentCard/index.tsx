@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import {Button, Card, Flex, Popover, Stack, useClickOutside} from '@sanity/ui'
+import {Button, Card, Flex, Popover, Stack, useClickOutside, useTheme} from '@sanity/ui'
 import {AddIcon, DragHandleIcon} from '@sanity/icons'
 import React, {useState, useMemo, CSSProperties} from 'react'
 import {useSchema, SchemaType} from 'sanity'
@@ -7,14 +7,14 @@ import {UserSelectMenu} from 'sanity-plugin-utils'
 import {SanityPreview as Preview} from 'sanity/_unstable'
 
 import EditButton from './EditButton'
-import {ItemWithMetadata, User} from '../../types'
+import {SanityDocumentWithMetadata, User} from '../../types'
 import AvatarGroup from './AvatarGroup'
 
 type DocumentCardProps = {
   userList: User[]
   bindDrag: any
   dragData: any
-  item: ItemWithMetadata
+  item: SanityDocumentWithMetadata
   onAssigneeAdd?: (userId: string) => void
   onAssigneeRemove?: (userId: string) => void
   onAssigneesClear?: () => void
@@ -35,6 +35,9 @@ export function DocumentCard(props: DocumentCardProps) {
   const {assignees, documentId} = item._metadata ?? {}
   const schema = useSchema()
 
+  const isDarkMode = useTheme().sanity.color.dark
+  const defaultCardTone = isDarkMode ? 'transparent' : 'default'
+
   const isBeingDragged = useMemo(() => dragData?.documentId === documentId, [dragData, documentId])
 
   // Open/close handler
@@ -54,7 +57,7 @@ export function DocumentCard(props: DocumentCardProps) {
       <Card
         radius={2}
         shadow={isBeingDragged ? 3 : 1}
-        tone={isBeingDragged ? 'positive' : 'default'}
+        tone={isBeingDragged ? 'positive' : defaultCardTone}
       >
         <Stack>
           <div {...bindDrag(item)} style={{cursor: isBeingDragged ? 'grabbing' : 'grab'}}>

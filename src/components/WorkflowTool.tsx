@@ -1,14 +1,26 @@
 import React from 'react'
-import {Flex, Card, Box, Stack, Grid, Spinner, Label, useToast, Container} from '@sanity/ui'
-import {Feedback, useProjectUsers, useListeningQuery} from 'sanity-plugin-utils'
+import {
+  Flex,
+  Card,
+  Box,
+  Stack,
+  Grid,
+  Spinner,
+  Label,
+  useToast,
+  Container,
+  useTheme,
+} from '@sanity/ui'
+import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
 import {useDrag} from 'react-use-gesture'
 
-import {SanityDocumentLike, Tool, useClient} from 'sanity'
-import {DragData, ItemWithMetadata, Metadata, State} from '../types'
+import {Tool, useClient} from 'sanity'
+import {DragData, SanityDocumentWithMetadata, State} from '../types'
 import {DocumentCard} from './DocumentCard'
 import Mutate from './Mutate'
+import {useWorkflowDocuments} from '../hooks/useWorkflowDocuments'
 
-function filterItemsByState(items: ItemWithMetadata[], stateId: string) {
+function filterItemsByState(items: SanityDocumentWithMetadata[], stateId: string) {
   return items.filter((item) => item?._metadata?.state === stateId)
 }
 
@@ -19,33 +31,6 @@ type WorkflowToolOptions = {
 
 type WorkflowToolProps = {
   tool: Tool<WorkflowToolOptions>
-}
-
-const DOCUMENT_LIST_QUERY = `*[_type in $schemaTypes]{ _id, _type, _rev }`
-const METADATA_LIST_QUERY = `*[_type == "workflow.metadata"]{
-  _rev,
-  assignees,
-  documentId,
-  state
-}`
-// "reference": coalesce(
-//   *[_id == "drafts." + ^.documentId] {_type} [0],
-//   *[_id == ^.documentId] {_type} [0]
-// ),
-
-const COMBINED_QUERY = `{
-  "documents": ${DOCUMENT_LIST_QUERY},
-  "metadata": ${METADATA_LIST_QUERY}
-}`
-
-type DocumentsAndMetadata = {
-  documents: SanityDocumentLike[]
-  metadata: Metadata[]
-}
-
-const INITIAL_DATA: DocumentsAndMetadata = {
-  documents: [],
-  metadata: [],
 }
 
 type MutateProps = {
@@ -68,47 +53,19 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   const client = useClient()
   const toast = useToast()
 
+  const isDarkMode = useTheme().sanity.color.dark
+  const defaultCardTone = isDarkMode ? 'default' : 'transparent'
+
   const userList = useProjectUsers() || []
-  const {data, loading, error} = useListeningQuery<DocumentsAndMetadata>(
-    COMBINED_QUERY,
-    {schemaTypes},
-    {},
-    INITIAL_DATA
-  )
-  const {documents, metadata} = data
+  const {workflowData} = useWorkflowDocuments(schemaTypes)
+  const {data, loading, error} = workflowData
 
   // const documentIds = documents.map((item) => item.documentId)
   // const metadataDocumentIds = metadata.map((d) => d.documentId)
   // const documentIdsWithoutMetadata = documentIds.filter((id) => !metadataDocumentIds.includes(id))
 
-  // Combine metadata data into document
-  const documentsWithMetadata = React.useMemo(
-    () =>
-      documents.reduce((acc, cur) => {
-        // Filter out documents without metadata
-        const curMeta = metadata.find((d) => d.documentId === cur._id.replace(`drafts.`, ``))
-
-        if (!curMeta) {
-          return acc
-        }
-
-        const curWithMetadata: ItemWithMetadata = {_metadata: curMeta, ...cur}
-
-        // Remove `published` from array if `draft` exists
-        if (!cur._id.startsWith(`drafts.`)) {
-          // eslint-disable-next-line max-nested-callbacks
-          const alsoHasDraft = documents.some((doc) => doc._id === `drafts.${cur._id}`)
-
-          return alsoHasDraft ? acc : [...acc, curWithMetadata]
-        }
-
-        return [...acc, curWithMetadata]
-      }, [] as ItemWithMetadata[]),
-    [documents, metadata]
-  )
-
   const move = React.useCallback(
-    (document: ItemWithMetadata, newStateId: string) => {
+    (document: SanityDocumentWithMetadata, newStateId: string) => {
       const newState = states.find((s) => s.id === newStateId)
 
       if (!newState?.id) {
@@ -292,7 +249,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
           <Card
             borderLeft={stateIndex > 0}
             key={state.id}
-            tone={targetState && targetState === state.id ? `primary` : undefined}
+            tone={targetState && targetState === state.id ? `primary` : defaultCardTone}
           >
             <Box>
               <Stack>
@@ -305,8 +262,10 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                       <Spinner muted />
                     </Flex>
                   ) : null}
-                  {documentsWithMetadata.length > 0 &&
-                    filterItemsByState(documentsWithMetadata, state.id).map((item) => (
+                  {data.length > 0 &&
+                    filterItemsByState(data, state.id).map((item) => (
+                      // The metadata's documentId is always published
+                      // It doesn't change and force a rerender
                       <div key={item._metadata.documentId}>
                         <DocumentCard
                           bindDrag={bindDrag}
