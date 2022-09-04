@@ -13,19 +13,26 @@ yarn add sanity-plugin-workflow
 ```
 
 ## Usage
+
 Add it as a plugin in sanity.config.ts (or .js):
 
-```
+```js
  import {createConfig} from 'sanity'
- import {myPlugin} from 'sanity-plugin-workflow'
+ import {workflow} from 'sanity-plugin-workflow'
 
  export const createConfig({
-     /...
+    // all other settings ...
      plugins: [
-         myPlugin({})
+         workflow({
+            // Required
+            schemaTypes: [],
+            // Optional
+            states: [],
+         })
      ]
  })
 ```
+
 ## License
 
 MIT © Simeon Griggs
