@@ -1,10 +1,13 @@
+import React from 'react'
 import {SanityDocumentLike} from 'sanity'
 
 export type State = {
   id: string
   title: string
-  publish?: boolean
-  unpublish?: boolean
+  operation?: 'publish' | 'unpublish'
+  // From badge props
+  color?: 'primary' | 'success' | 'warning' | 'danger'
+  icon?: React.ReactNode | React.ComponentType
 }
 
 export type WorkflowConfig = {

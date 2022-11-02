@@ -1,8 +1,10 @@
 import React from 'react'
 import {useListeningQuery} from 'sanity-plugin-utils'
-import {SanityDocumentLike} from 'sanity'
+import {useToast} from '@sanity/ui'
+import {SanityDocumentLike, useClient} from 'sanity'
+import {DraggableLocation} from 'react-beautiful-dnd'
 
-import {SanityDocumentWithMetadata, Metadata} from '../types'
+import {SanityDocumentWithMetadata, Metadata, State} from '../types'
 
 type DocumentsAndMetadata = {
   documents: SanityDocumentLike[]
@@ -28,44 +30,128 @@ const INITIAL_DATA: DocumentsAndMetadata = {
 }
 
 export function useWorkflowDocuments(schemaTypes: string[]) {
+  const toast = useToast()
+  const client = useClient()
+  const [localDocuments, setLocalDocuments] = React.useState<SanityDocumentWithMetadata[]>([])
+
   // Get and listen to changes on documents + workflow metadata documents
-  const {data, loading, error} = useListeningQuery<DocumentsAndMetadata>(
-    COMBINED_QUERY,
-    {schemaTypes},
-    {},
-    INITIAL_DATA
-  )
+  const {data, loading, error} = useListeningQuery<DocumentsAndMetadata>(COMBINED_QUERY, {
+    params: {schemaTypes},
+    initialValue: INITIAL_DATA,
+  })
 
-  // Combine metadata data into document
-  const documentsWithMetadata = React.useMemo(
-    () =>
-      data.documents.reduce((acc: SanityDocumentWithMetadata[], cur) => {
-        // Filter out documents without metadata
-        const curMeta = data.metadata.find((d) => d.documentId === cur._id.replace(`drafts.`, ``))
+  // Store local state for optimistic updates
+  React.useEffect(() => {
+    if (data) {
+      // Combine metadata data into document
+      const documentsWithMetadata = data.documents.reduce(
+        (acc: SanityDocumentWithMetadata[], cur) => {
+          // Filter out documents without metadata
+          const curMeta = data.metadata.find((d) => d.documentId === cur._id.replace(`drafts.`, ``))
 
-        if (!curMeta) {
-          return acc
+          if (!curMeta) {
+            return acc
+          }
+
+          const curWithMetadata = {_metadata: curMeta, ...cur}
+
+          // Remove `published` from array if `draft` exists
+          if (!cur._id.startsWith(`drafts.`)) {
+            // eslint-disable-next-line max-nested-callbacks
+            const alsoHasDraft: boolean = Boolean(
+              data.documents.find((doc) => doc._id === `drafts.${cur._id}`)
+            )
+
+            return alsoHasDraft ? acc : [...acc, curWithMetadata]
+          }
+
+          return [...acc, curWithMetadata]
+        },
+        []
+      )
+
+      setLocalDocuments(documentsWithMetadata)
+    }
+  }, [data])
+
+  const move = React.useCallback(
+    (draggedId: string, destination: DraggableLocation, states: State[]) => {
+      // Optimistic update
+      const currentLocalData = localDocuments
+      const newLocalDocuments = localDocuments.map((item) => {
+        if (item._metadata.documentId === draggedId) {
+          return {
+            ...item,
+            _metadata: {
+              ...item._metadata,
+              state: destination.droppableId,
+            },
+          }
         }
 
-        const curWithMetadata = {_metadata: curMeta, ...cur, thing: 'ert'}
+        return item
+      })
 
-        // Remove `published` from array if `draft` exists
-        if (!cur._id.startsWith(`drafts.`)) {
-          // eslint-disable-next-line max-nested-callbacks
-          const alsoHasDraft: boolean = Boolean(
-            data.documents.find((doc) => doc._id === `drafts.${cur._id}`)
-          )
+      setLocalDocuments(newLocalDocuments)
 
-          return alsoHasDraft ? acc : [...acc, curWithMetadata]
-        }
+      // Now client-side update
+      const newStateId = destination.droppableId
+      const newState = states.find((s) => s.id === newStateId)
+      const document = localDocuments.find((d) => d._metadata.documentId === draggedId)
 
-        return [...acc, curWithMetadata]
-      }, []),
-    [data]
+      if (!newState?.id) {
+        toast.push({
+          title: `Could not find target state ${newStateId}`,
+          status: 'error',
+        })
+        return null
+      }
+
+      if (!document) {
+        toast.push({
+          title: `Could not find dragged document in data`,
+          status: 'error',
+        })
+        return null
+      }
+
+      // We need to know if it's a draft or not
+      const {_id, _type} = document
+
+      // Metadata + useDocumentOperation always uses Published id
+      const {_rev, documentId} = document._metadata
+
+      client
+        .patch(`workflow-metadata.${documentId}`)
+        .ifRevisionId(_rev)
+        .set({state: newStateId})
+        .commit()
+        .then(() => {
+          return toast.push({
+            title: `Moved to "${newState?.title ?? newStateId}"`,
+            description: documentId,
+            status: 'success',
+          })
+        })
+        .catch(() => {
+          // Revert optimistic update
+          setLocalDocuments(currentLocalData)
+
+          return toast.push({
+            title: `Failed to move to "${newState?.title ?? newStateId}"`,
+            description: documentId,
+            status: 'error',
+          })
+        })
+
+      // Send back to the workflow board so a document update can happen
+      return {_id, _type, documentId, state: newState as State}
+    },
+    [client, toast, localDocuments]
   )
 
   return {
-    workflowData: {data: documentsWithMetadata, loading, error},
-    operations: {},
+    workflowData: {data: localDocuments, loading, error},
+    operations: {move},
   }
 }
