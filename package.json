@@ -4,14 +4,14 @@
   "description": "A demonstration of a custom content publishing workflow using Sanity.",
   "author": "Simeon Griggs <simeon@sanity.io>",
   "license": "MIT",
-  "source": "./src/index.tsx",
+  "source": "./src/index.ts",
   "main": "./lib/index.js",
   "module": "./lib/index.esm.js",
   "types": "./lib/src/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/src/index.d.ts",
-      "source": "./src/index.tsx",
+      "source": "./src/index.ts",
       "import": "./lib/index.esm.js",
       "require": "./lib/index.js",
       "default": "./lib/index.js"
@@ -44,7 +44,7 @@
     "@sanity/incompatible-plugin": "^1.0.4",
     "react-beautiful-dnd": "^13.1.1",
     "react-fast-compare": "^3.2.0",
-    "sanity-plugin-utils": "^0.0.2"
+    "sanity-plugin-utils": "^0.0.3"
   },
   "devDependencies": {
     "@parcel/packager-ts": "^2.6.2",

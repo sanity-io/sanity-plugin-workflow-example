@@ -49,8 +49,9 @@ export function useWorkflowDocuments(schemaTypes: string[]) {
           // Filter out documents without metadata
           const curMeta = data.metadata.find((d) => d.documentId === cur._id.replace(`drafts.`, ``))
 
+          // Add _metadata as null so it can be shown as a document that needs to be imported into workflow
           if (!curMeta) {
-            return acc
+            return [...acc, {_metadata: null, ...cur}]
           }
 
           const curWithMetadata = {_metadata: curMeta, ...cur}

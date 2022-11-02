@@ -46,5 +46,5 @@ export type Metadata = SanityDocumentLike & {
 }
 
 export type SanityDocumentWithMetadata = SanityDocumentLike & {
-  _metadata: Metadata
+  _metadata: Metadata | null
 }

@@ -63,9 +63,32 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   // Operations to perform on cards
   const {move} = operations
 
-  const documentIdsWithoutMetadata = data
+  const documentsWithoutMetadataIds = data
     .filter((doc) => !doc._metadata)
     .map((d) => d._id.replace(`drafts.`, ``))
+
+  const importDocuments = React.useCallback(async (ids: string[]) => {
+    toast.push({
+      title: 'Importing documents',
+      status: 'info',
+    })
+
+    const tx = ids.reduce((item, documentId) => {
+      return item.createOrReplace({
+        _id: `workflow-metadata.${documentId}`,
+        _type: 'workflow.metadata',
+        state: 'draft',
+        documentId,
+      })
+    }, client.transaction())
+
+    await tx.commit()
+
+    toast.push({
+      title: 'Imported documents',
+      status: 'success',
+    })
+  }, [])
 
   const handleDragEnd = React.useCallback(
     (result: DropResult) => {
@@ -117,16 +140,15 @@ export default function WorkflowTool(props: WorkflowToolProps) {
           ))}
         </div>
       ) : null}
-      {documentIdsWithoutMetadata.length > 0 && (
-        <Box paddingY={5} paddingX={3}>
-          <Card shadow={1} padding={4} style={{textAlign: 'center'}}>
-            <Button
-              tone="primary"
-              // onClick={() => metadataList.importDocuments(documentIdsWithoutMetadata)}
-            >
-              Import {documentIdsWithoutMetadata.length}{' '}
-              {documentIdsWithoutMetadata.length === 1 ? `Document` : `Documents`}
-            </Button>
+      {documentsWithoutMetadataIds.length > 0 && (
+        <Box padding={5}>
+          <Card border padding={3} tone="caution">
+            <Flex align="center" justify="center">
+              <Button onClick={() => importDocuments(documentsWithoutMetadataIds)}>
+                Import {documentsWithoutMetadataIds.length} Missing{' '}
+                {documentsWithoutMetadataIds.length === 1 ? `Document` : `Documents`} into Workflow
+              </Button>
+            </Flex>
           </Card>
         </Box>
       )}
