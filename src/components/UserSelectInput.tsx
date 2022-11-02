@@ -1,7 +1,7 @@
 import {Card} from '@sanity/ui'
 import React, {useCallback} from 'react'
-import {ArrayOfPrimitivesInputProps} from 'sanity'
-import {setIfMissing, insert, unset} from 'sanity/form'
+import type {ArrayOfPrimitivesInputProps} from 'sanity'
+import {setIfMissing, insert, unset} from 'sanity'
 import {UserSelectMenu, useProjectUsers} from 'sanity-plugin-utils'
 
 export default function UserSelectInput(props: ArrayOfPrimitivesInputProps) {

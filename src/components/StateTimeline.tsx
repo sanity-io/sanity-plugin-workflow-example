@@ -1,11 +1,11 @@
 import {Button, Card, Text, Inline, Stack, useToast} from '@sanity/ui'
 import React, {useEffect} from 'react'
-import {InputProps, useClient} from 'sanity'
+import {ObjectInputProps, useClient} from 'sanity'
 
 import {useWorkflowMetadata} from '../hooks/useWorkflowMetadata'
 import {State} from '../types'
 
-type StateTimelineProps = InputProps & {
+type StateTimelineProps = ObjectInputProps & {
   states: State[]
   children: React.ReactNode
 }
@@ -13,9 +13,7 @@ type StateTimelineProps = InputProps & {
 export default function StateTimeline(props: StateTimelineProps) {
   const {value, states, children} = props
 
-  // check if value is an object
-  const valueIsObject = typeof value === 'object' && value !== null && !Array.isArray(value)
-  const documentId = valueIsObject ? String(value._id) : ``
+  const documentId = String(value?._id)
 
   const {data, loading, error} = useWorkflowMetadata(documentId, states)
   const {state} = data

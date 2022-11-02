@@ -1,7 +1,7 @@
-import React from 'react'
-import {createPlugin} from 'sanity'
+// import React from 'react'
+// import {Stack} from '@sanity/ui'
+import {definePlugin} from 'sanity'
 import {CheckmarkIcon, SplitVerticalIcon} from '@sanity/icons'
-import {Stack} from '@sanity/ui'
 
 import WorkflowTool from './components/WorkflowTool'
 import {WorkflowConfig} from './types'
@@ -9,7 +9,7 @@ import metadata from './schema/workflow/metadata'
 import {StateBadge} from './badges'
 import {PromoteAction} from './actions/PromoteAction'
 import {DemoteAction} from './actions/DemoteAction'
-import StateTimeline from './components/StateTimeline'
+// import StateTimeline from './components/StateTimeline'
 
 const DEFAULT_CONFIG: WorkflowConfig = {
   schemaTypes: [],
@@ -33,7 +33,7 @@ const DEFAULT_CONFIG: WorkflowConfig = {
   ],
 }
 
-export const workflow = createPlugin<WorkflowConfig>((config = DEFAULT_CONFIG) => {
+export const workflow = definePlugin<WorkflowConfig>((config = DEFAULT_CONFIG) => {
   const {schemaTypes, states} = {...DEFAULT_CONFIG, ...config}
 
   if (!states?.length) {
@@ -46,18 +46,20 @@ export const workflow = createPlugin<WorkflowConfig>((config = DEFAULT_CONFIG) =
       schemaTypes: [metadata(states)],
     },
     form: {
-      renderInput: (inputProps, next) => {
-        if (inputProps.id === `root` && schemaTypes.includes(inputProps.schemaType.name)) {
-          return (
-            <Stack space={3}>
-              <StateTimeline {...inputProps} states={states}>
-                {next(inputProps)}
-              </StateTimeline>
-            </Stack>
-          )
-        }
-
-        return null
+      components: {
+        item: (props) => {
+          console.log(props)
+          // if (props.id === `root` && schemaTypes.includes(props.schemaType.name)) {
+          //   return (
+          //     <Stack space={3}>
+          //       <StateTimeline {...props} states={states}>
+          //         {props.renderDefault(props)}
+          //       </StateTimeline>
+          //     </Stack>
+          //   )
+          // }
+          return props.renderDefault(props)
+        },
       },
     },
     document: {

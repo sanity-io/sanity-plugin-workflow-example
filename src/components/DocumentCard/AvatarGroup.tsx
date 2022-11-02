@@ -1,6 +1,6 @@
 import React from 'react'
 import {Box, Flex, Text} from '@sanity/ui'
-import {UserAvatar} from 'sanity/_unstable'
+import {UserAvatar} from 'sanity'
 
 import {User} from '../../types'
 
