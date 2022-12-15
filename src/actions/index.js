@@ -16,6 +16,6 @@ export function resolveWorkflowActions(/* docInfo */) {
     PublishAction,
     UnpublishAction,
     DiscardChangesAction,
-    DeleteAction
+    DeleteAction,
   ]
 }

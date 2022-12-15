@@ -20,7 +20,7 @@ export function RequestReviewAction(props) {
     }
   }
 
-  const onSend = assignees => {
+  const onSend = (assignees) => {
     setShowWizardDialog(false)
 
     if (assignees.length === 0) {
@@ -39,17 +39,17 @@ export function RequestReviewAction(props) {
     dialog: showWizardDialog && {
       type: 'popover',
       content: <RequestReviewWizard metadata={metadata.data} onClose={onClose} onSend={onSend} />,
-      onClose: props.onComplete
+      onClose: props.onComplete,
     },
     disabled: showWizardDialog,
     icon: EyeOpenIcon,
     label: 'Request review',
-    onHandle
+    onHandle,
   }
 }
 
 RequestReviewAction.propTypes = {
   draft: PropTypes.object,
   id: PropTypes.string,
-  onComplete: PropTypes.func
+  onComplete: PropTypes.func,
 }

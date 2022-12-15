@@ -1,7 +1,7 @@
 import React from 'react'
 import {Button} from '@sanity/ui'
 import {EditIcon} from '@sanity/icons'
-import {useRouter} from 'sanity/_unstable'
+import {useRouter} from 'sanity/router'
 
 type EditButtonProps = {
   id: string
