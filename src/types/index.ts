@@ -4,7 +4,7 @@ import {SanityDocumentLike} from 'sanity'
 export type State = {
   id: string
   title: string
-  operation?: 'publish' | 'unpublish'
+  operation?: 'publish' | 'unpublish' | null
   // From badge props
   color?: 'primary' | 'success' | 'warning' | 'danger'
   icon?: React.ReactNode | React.ComponentType

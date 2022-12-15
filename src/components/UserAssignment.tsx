@@ -20,24 +20,37 @@ export default function UserAssignment(props: UserAssignmentProps) {
   const [openId, setOpenId] = React.useState<string>(``)
 
   const addAssignee = React.useCallback(
-    (id: string, userId: string) => {
+    (userId: string) => {
+      if (!userId) {
+        return toast.push({
+          status: 'error',
+          title: 'No user selected',
+        })
+      }
+
       client
-        .patch(`workflow-metadata.${id}`)
+        .patch(`workflow-metadata.${documentId}`)
         .setIfMissing({assignees: []})
         .insert(`after`, `assignees[-1]`, [userId])
         .commit()
-        .then((res) => res)
+        .then(() => {
+          return toast.push({
+            title: `Assigned user to document`,
+            description: userId,
+            status: 'success',
+          })
+        })
         .catch((err) => {
           console.error(err)
 
           return toast.push({
             title: `Failed to add assignee`,
-            description: id,
+            description: userId,
             status: 'error',
           })
         })
     },
-    [client, toast]
+    [documentId, client, toast]
   )
 
   const removeAssignee = React.useCallback(
@@ -87,7 +100,6 @@ export default function UserAssignment(props: UserAssignmentProps) {
       // onKeyDown={handleKeyDown}
       content={
         <UserSelectMenu
-          // open={false}
           style={{maxHeight: 300}}
           value={assignees || []}
           userList={userList}

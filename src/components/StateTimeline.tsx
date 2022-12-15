@@ -11,6 +11,14 @@ type StateTimelineProps = ObjectInputProps & {
 }
 
 export default function StateTimeline(props: StateTimelineProps) {
+  //   return (
+  //     <Stack space={3}>
+  //       <StateTimeline {...props} states={states}>
+  //         {props.renderDefault(props)}
+  //       </StateTimeline>
+  //     </Stack>
+  //   )
+  console.log(props)
   const {value, states, children} = props
 
   const documentId = String(value?._id)
