@@ -3,19 +3,19 @@ import {
   Flex,
   Card,
   Box,
+  Stack,
   Grid,
   Spinner,
   Label,
   useToast,
   Container,
   useTheme,
-  Button,
 } from '@sanity/ui'
 import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
-import {Tool, useClient} from 'sanity'
-import {DragDropContext, Droppable, Draggable, DropResult} from 'react-beautiful-dnd'
+import {useDrag} from 'react-use-gesture'
 
-import {SanityDocumentWithMetadata, State} from '../types'
+import {Tool, useClient} from 'sanity'
+import {DragData, SanityDocumentWithMetadata, State} from '../types'
 import {DocumentCard} from './DocumentCard'
 import Mutate from './Mutate'
 import {useWorkflowDocuments} from '../hooks/useWorkflowDocuments'
@@ -48,6 +48,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     setMutatingDocs((docs) => docs.filter((doc) => doc._id !== documentId))
   }, [])
 
+  const [dragData, setDragData] = React.useState<DragData>({})
+  const [targetState, setTargetState] = React.useState<string | null>(null)
   const client = useClient()
   const toast = useToast()
 
@@ -55,61 +57,150 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   const defaultCardTone = isDarkMode ? 'default' : 'transparent'
 
   const userList = useProjectUsers() || []
-  const {workflowData, operations} = useWorkflowDocuments(schemaTypes)
-
-  // Data to display in cards
+  const {workflowData} = useWorkflowDocuments(schemaTypes)
   const {data, loading, error} = workflowData
 
-  // Operations to perform on cards
-  const {move} = operations
+  // const documentIds = documents.map((item) => item.documentId)
+  // const metadataDocumentIds = metadata.map((d) => d.documentId)
+  // const documentIdsWithoutMetadata = documentIds.filter((id) => !metadataDocumentIds.includes(id))
 
-  const documentsWithoutMetadataIds = data
-    .filter((doc) => !doc._metadata)
-    .map((d) => d._id.replace(`drafts.`, ``))
+  const move = React.useCallback(
+    (document: SanityDocumentWithMetadata, newStateId: string) => {
+      const newState = states.find((s) => s.id === newStateId)
 
-  const importDocuments = React.useCallback(async (ids: string[]) => {
-    toast.push({
-      title: 'Importing documents',
-      status: 'info',
-    })
-
-    const tx = ids.reduce((item, documentId) => {
-      return item.createOrReplace({
-        _id: `workflow-metadata.${documentId}`,
-        _type: 'workflow.metadata',
-        state: 'draft',
-        documentId,
-      })
-    }, client.transaction())
-
-    await tx.commit()
-
-    toast.push({
-      title: 'Imported documents',
-      status: 'success',
-    })
-  }, [])
-
-  const handleDragEnd = React.useCallback(
-    (result: DropResult) => {
-      const {draggableId, source, destination} = result
-      console.log(
-        `sending ${draggableId} from ${source.droppableId} to ${destination?.droppableId}`
-      )
-
-      if (!destination || destination.droppableId === source.droppableId) {
-        return
+      if (!newState?.id) {
+        return toast.push({
+          title: `Could not find target state ${newStateId}`,
+          status: 'error',
+        })
       }
 
-      // The list of mutating docs is how we un/publish documents
-      const mutatingDoc = move(draggableId, destination, states)
+      // We need to know if it's a draft or not
+      const {_id, _type} = document
 
-      if (mutatingDoc) {
-        setMutatingDocs((current) => [...current, mutatingDoc])
-      }
+      // Metadata + useDocumentOperation always uses Published id
+      const {_rev, documentId} = document._metadata
+
+      setMutatingDocs((current) => [...current, {_id, _type, documentId, state: newState as State}])
+
+      return client
+        .patch(`workflow-metadata.${documentId}`)
+        .ifRevisionId(_rev)
+        .set({state: newStateId})
+        .commit()
+        .then(() => {
+          return toast.push({
+            title: `Moved to "${newState?.title ?? newStateId}"`,
+            description: documentId,
+            status: 'success',
+          })
+        })
+        .catch(() => {
+          return toast.push({
+            title: `Failed to move to "${newState?.title ?? newStateId}"`,
+            description: documentId,
+            status: 'error',
+          })
+        })
     },
-    [move, states]
+    [client, states, toast]
   )
+
+  const addAssignee = React.useCallback(
+    (documentId: string, userId: string) => {
+      client
+        .patch(`workflow-metadata.${documentId}`)
+        .setIfMissing({assignees: []})
+        .insert(`after`, `assignees[-1]`, [userId])
+        .commit()
+        .then((res) => res)
+        .catch((err) => {
+          console.error(err)
+
+          return toast.push({
+            title: `Failed to add assignee`,
+            description: documentId,
+            status: 'error',
+          })
+        })
+    },
+    [client, toast]
+  )
+
+  const removeAssignee = React.useCallback(
+    (documentId: string, userId: string) => {
+      client
+        .patch(`workflow-metadata.${documentId}`)
+        .unset([`assignees[@ == "${userId}"]`])
+        .commit()
+        .then((res) => res)
+        .catch((err) => {
+          console.error(err)
+
+          return toast.push({
+            title: `Failed to remove assignee`,
+            description: documentId,
+            status: 'error',
+          })
+        })
+    },
+    [client, toast]
+  )
+
+  const clearAssignees = React.useCallback(
+    (documentId: string) => {
+      client
+        .patch(`workflow-metadata.${documentId}`)
+        .unset([`assignees`])
+        .commit()
+        .then((res) => res)
+        .catch((err) => {
+          console.error(err)
+
+          return toast.push({
+            title: `Failed to clear assignees`,
+            description: documentId,
+            status: 'error',
+          })
+        })
+    },
+    [client, toast]
+  )
+
+  const bindDrag = useDrag(({args, down, xy, movement}) => {
+    const [document] = args
+
+    // Card distance from initial location
+    const [x, y] = movement
+
+    // Cursor travel distance
+    const [cursorX] = xy
+
+    const columnWidth = window.innerWidth / states.length
+    const currentColumn = Math.trunc(cursorX / columnWidth)
+    const newTargetState = states[currentColumn]?.id ?? ``
+    if (targetState !== newTargetState) {
+      setTargetState(newTargetState)
+    }
+
+    const documentId = document._metadata.documentId
+
+    if (down) {
+      setDragData({
+        documentId,
+        x,
+        y,
+        state: document._metadata.state,
+      })
+    } else {
+      if (newTargetState && document._metadata.state !== newTargetState) {
+        move(document, newTargetState)
+      }
+
+      setDragData({})
+      setTargetState(null)
+    }
+  })
 
   if (!states?.length) {
     return (
@@ -140,68 +231,61 @@ export default function WorkflowTool(props: WorkflowToolProps) {
           ))}
         </div>
       ) : null}
-      {documentsWithoutMetadataIds.length > 0 && (
-        <Box padding={5}>
-          <Card border padding={3} tone="caution">
-            <Flex align="center" justify="center">
-              <Button onClick={() => importDocuments(documentsWithoutMetadataIds)}>
-                Import {documentsWithoutMetadataIds.length} Missing{' '}
-                {documentsWithoutMetadataIds.length === 1 ? `Document` : `Documents`} into Workflow
+      {/* {documentIdsWithoutMetadata.length > 0 && (
+          <Box paddingY={5} paddingX={3}>
+            <Card shadow={1} padding={4} style={{textAlign: 'center'}}>
+              <Button
+                tone="primary"
+                onClick={() => metadataList.importDocuments(documentIdsWithoutMetadata)}
+              >
+                Import {documentIdsWithoutMetadata.length}{' '}
+                {documentIdsWithoutMetadata.length === 1 ? `Document` : `Documents`}
               </Button>
-            </Flex>
-          </Card>
-        </Box>
-      )}
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Grid columns={states.length} height="fill">
-          {states.map((state: State, stateIndex: number) => (
-            <Card key={state.id} borderLeft={stateIndex > 0}>
-              <Card paddingY={4} padding={3} style={{pointerEvents: `none`}}>
-                <Label>{state.title}</Label>
-              </Card>
-              <Droppable droppableId={state.id}>
-                {(provided, snapshot) => (
-                  <Card
-                    ref={provided.innerRef}
-                    tone={snapshot.isDraggingOver ? `primary` : defaultCardTone}
-                    height="fill"
-                  >
-                    {loading ? (
-                      <Flex padding={5} align="center" justify="center">
-                        <Spinner muted />
-                      </Flex>
-                    ) : null}
-
-                    {data.length > 0 &&
-                      filterItemsByState(data, state.id).map((item, itemIndex) => (
-                        // The metadata's documentId is always the published one
-                        <Draggable
-                          key={item._metadata.documentId}
-                          draggableId={item._metadata.documentId}
-                          index={itemIndex}
-                        >
-                          {(draggableProvided, draggableSnapshot) => (
-                            <div
-                              ref={draggableProvided.innerRef}
-                              {...draggableProvided.draggableProps}
-                              {...draggableProvided.dragHandleProps}
-                            >
-                              <DocumentCard
-                                isDragging={draggableSnapshot.isDragging}
-                                item={item}
-                                userList={userList}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                  </Card>
-                )}
-              </Droppable>
             </Card>
-          ))}
-        </Grid>
-      </DragDropContext>
+          </Box>
+        )} */}
+      <Grid columns={states.length} height="fill">
+        {states.map((state: State, stateIndex: number) => (
+          <Card
+            borderLeft={stateIndex > 0}
+            key={state.id}
+            tone={targetState && targetState === state.id ? `primary` : defaultCardTone}
+          >
+            <Box>
+              <Stack>
+                <Box paddingX={3} paddingTop={4} paddingBottom={2} style={{pointerEvents: `none`}}>
+                  <Label>{state.title}</Label>
+                </Box>
+                <Grid columns={1} gap={3} padding={3}>
+                  {loading ? (
+                    <Flex height="fill" align="center" justify="center">
+                      <Spinner muted />
+                    </Flex>
+                  ) : null}
+                  {data.length > 0 &&
+                    filterItemsByState(data, state.id).map((item) => (
+                      // The metadata's documentId is always published
+                      // It doesn't change and force a rerender
+                      <div key={item._metadata.documentId}>
+                        <DocumentCard
+                          bindDrag={bindDrag}
+                          dragData={dragData}
+                          item={item}
+                          userList={userList}
+                          onAssigneeAdd={(userId) => addAssignee(item._metadata.documentId, userId)}
+                          onAssigneeRemove={(userId) =>
+                            removeAssignee(item._metadata.documentId, userId)
+                          }
+                          onAssigneesClear={() => clearAssignees(item._metadata.documentId)}
+                        />
+                      </div>
+                    ))}
+                </Grid>
+              </Stack>
+            </Box>
+          </Card>
+        ))}
+      </Grid>
     </>
   )
 }

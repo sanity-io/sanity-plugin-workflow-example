@@ -1,0 +1,8 @@
+{
+  "version": "v1",
+  "packages": {
+    "sanity-plugin-utils": {
+      "signature": "d8bd3be937260f5ddf0b584dd0f03597"
+    }
+  }
+}

@@ -1,13 +1,10 @@
-import React from 'react'
 import {SanityDocumentLike} from 'sanity'
 
 export type State = {
   id: string
   title: string
-  operation?: 'publish' | 'unpublish'
-  // From badge props
-  color?: 'primary' | 'success' | 'warning' | 'danger'
-  icon?: React.ReactNode | React.ComponentType
+  publish?: boolean
+  unpublish?: boolean
 }
 
 export type WorkflowConfig = {
@@ -46,5 +43,5 @@ export type Metadata = SanityDocumentLike & {
 }
 
 export type SanityDocumentWithMetadata = SanityDocumentLike & {
-  _metadata: Metadata | null
+  _metadata: Metadata
 }

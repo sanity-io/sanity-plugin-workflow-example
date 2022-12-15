@@ -1,21 +1,29 @@
 import React from 'react'
 import {Box, Flex, Text} from '@sanity/ui'
-import {UserAvatar} from 'sanity'
+import {UserAvatar} from 'sanity/_unstable'
 
 import {User} from '../../types'
 
 type AvatarGroupProps = {
-  users: User[]
-  max?: number
+  userList: User[]
+  assignees: string[]
 }
 
 export default function AvatarGroup(props: AvatarGroupProps) {
-  const {users, max = 3} = props
+  const {userList, assignees} = props
 
-  const len = users?.length
-  const visibleUsers = React.useMemo(() => users.slice(0, max), [users]) as User[]
+  const max = 3
+  const len = assignees?.length
+  const visibleUsers = React.useMemo(
+    () =>
+      assignees
+        .map((id) => userList.find((user) => user?.id === id))
+        .filter(Boolean)
+        .slice(0, max),
+    [userList, assignees]
+  ) as User[]
 
-  if (!users?.length) {
+  if (!assignees?.length || !userList?.length) {
     return null
   }
 
