@@ -49,8 +49,13 @@ jspm_packages
 # Cache
 .cache
 
+# Yalc
+.yalc
+yalc.lock
+
+##npm package zips
+*.tgz
+
 # Compiled plugin
 lib
 
-.yalc
-.parcel-cache
