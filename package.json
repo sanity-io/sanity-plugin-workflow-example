@@ -40,6 +40,7 @@
     "prebuild": "npm run clean && plugin-kit verify-package --silent && pkg-utils",
     "build": "pkg-utils build",
     "clean": "rimraf lib",
+    "format": "npx prettier --write . --ignore-path .gitignore",
     "link-watch": "plugin-kit link-watch",
     "lint": "eslint .",
     "prepublishOnly": "npm run build",

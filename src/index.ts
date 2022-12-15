@@ -36,57 +36,59 @@ const DEFAULT_CONFIG: WorkflowConfig = {
   ],
 }
 
-export const workflow = definePlugin<WorkflowConfig>((config = DEFAULT_CONFIG) => {
-  const {schemaTypes, states} = {...DEFAULT_CONFIG, ...config}
+export const workflow = definePlugin<WorkflowConfig>(
+  (config = DEFAULT_CONFIG) => {
+    const {schemaTypes, states} = {...DEFAULT_CONFIG, ...config}
 
-  if (!states?.length) {
-    throw new Error(`Workflow: Missing states in config`)
+    if (!states?.length) {
+      throw new Error(`Workflow: Missing states in config`)
+    }
+
+    return {
+      name: 'sanity-plugin-workflow',
+      schema: {
+        types: [metadata(states)],
+      },
+      // form: {
+      //   components: {
+      //     item: (props) => {
+      //       console.log(props)
+      //       // if (props.id === `root` && schemaTypes.includes(props.schemaType.name)) {
+      //       //   return StateTimeline(props)
+      //       // }
+      //       return props.renderDefault(props)
+      //     },
+      //   },
+      // },
+      document: {
+        actions: (prev, context) => {
+          if (!schemaTypes.includes(context.schemaType)) {
+            return prev
+          }
+
+          return [
+            (props) => PromoteAction(props, states),
+            (props) => DemoteAction(props, states),
+            ...prev,
+          ]
+        },
+        badges: (prev, context) => {
+          if (!schemaTypes.includes(context.schemaType)) {
+            return prev
+          }
+
+          return [(props) => StateBadge(props, states), ...prev]
+        },
+      },
+      tools: [
+        {
+          name: 'workflow',
+          title: 'Workflow',
+          component: WorkflowTool,
+          icon: SplitVerticalIcon,
+          options: {schemaTypes, states},
+        },
+      ],
+    }
   }
-
-  return {
-    name: 'sanity-plugin-workflow',
-    schema: {
-      types: [metadata(states)],
-    },
-    // form: {
-    //   components: {
-    //     item: (props) => {
-    //       console.log(props)
-    //       // if (props.id === `root` && schemaTypes.includes(props.schemaType.name)) {
-    //       //   return StateTimeline(props)
-    //       // }
-    //       return props.renderDefault(props)
-    //     },
-    //   },
-    // },
-    document: {
-      actions: (prev, context) => {
-        if (!schemaTypes.includes(context.schemaType)) {
-          return prev
-        }
-
-        return [
-          (props) => PromoteAction(props, states),
-          (props) => DemoteAction(props, states),
-          ...prev,
-        ]
-      },
-      badges: (prev, context) => {
-        if (!schemaTypes.includes(context.schemaType)) {
-          return prev
-        }
-
-        return [(props) => StateBadge(props, states), ...prev]
-      },
-    },
-    tools: [
-      {
-        name: 'workflow',
-        title: 'Workflow',
-        component: WorkflowTool,
-        icon: SplitVerticalIcon,
-        options: {schemaTypes, states},
-      },
-    ],
-  }
-})
+)

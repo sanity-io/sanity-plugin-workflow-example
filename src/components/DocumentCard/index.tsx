@@ -1,5 +1,14 @@
 /* eslint-disable react/prop-types */
-import {Box, Button, Card, Flex, Popover, Stack, useClickOutside, useTheme} from '@sanity/ui'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Popover,
+  Stack,
+  useClickOutside,
+  useTheme,
+} from '@sanity/ui'
 import {AddIcon, DragHandleIcon} from '@sanity/icons'
 import React, {useState} from 'react'
 import {useSchema, SchemaType} from 'sanity'
@@ -39,7 +48,11 @@ export function DocumentCard(props: DocumentCardProps) {
 
   return (
     <Box paddingY={2} paddingX={3}>
-      <Card radius={2} shadow={isDragging ? 3 : 1} tone={isDragging ? 'positive' : defaultCardTone}>
+      <Card
+        radius={2}
+        shadow={isDragging ? 3 : 1}
+        tone={isDragging ? 'positive' : defaultCardTone}
+      >
         <Stack>
           <Card
             borderBottom
@@ -62,7 +75,11 @@ export function DocumentCard(props: DocumentCardProps) {
           <Card padding={2} radius={2} tone="inherit">
             <Flex align="center" justify="space-between" gap={1}>
               {documentId && (
-                <UserAssignment userList={userList} assignees={assignees} documentId={documentId} />
+                <UserAssignment
+                  userList={userList}
+                  assignees={assignees}
+                  documentId={documentId}
+                />
               )}
 
               <EditButton id={item._id} type={item._type} />

@@ -33,7 +33,8 @@ export default (states: State[]) =>
       defineField({
         type: 'array',
         name: 'assignees',
-        description: 'The people who are assigned to move this further in the workflow.',
+        description:
+          'The people who are assigned to move this further in the workflow.',
         of: [{type: 'string'}],
         // components: {input: UserSelectInput},
       }),
