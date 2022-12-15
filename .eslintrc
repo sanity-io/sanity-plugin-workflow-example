@@ -10,9 +10,5 @@
     "sanity/react",
     "plugin:react-hooks/recommended",
     "plugin:prettier/recommended"
-  ],
-  "plugins": ["react"],
-  "rules": {
-    "react/require-default-props": 0
-  }
+  ]
 }

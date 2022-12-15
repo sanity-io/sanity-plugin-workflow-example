@@ -6,13 +6,13 @@
     "sanity",
     "sanity-plugin"
   ],
-  "homepage": "https://github.com/sanity-io/demo-media-site-nextjs#readme",
+  "homepage": "https://github.com/sanity-io/sanity-plugin-workflow#readme",
   "bugs": {
-    "url": "https://github.com/sanity-io/demo-media-site-nextjs/issues"
+    "url": "https://github.com/sanity-io/sanity-plugin-workflow/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:sanity-io/demo-media-site-nextjs.git"
+    "url": "git@github.com:sanity-io/sanity-plugin-workflow.git"
   },
   "license": "MIT",
   "author": "Simeon Griggs <simeon@sanity.io>",
@@ -53,28 +53,28 @@
     "sanity-plugin-utils": "^0.0.3"
   },
   "devDependencies": {
-    "@sanity/pkg-utils": "^1.20.1",
-    "@sanity/plugin-kit": "^2.1.17",
+    "@sanity/pkg-utils": "^1.20.3",
+    "@sanity/plugin-kit": "^2.2.0",
     "@types/react-beautiful-dnd": "^13.1.2",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
-    "eslint": "^8.28.0",
+    "@typescript-eslint/eslint-plugin": "^5.46.1",
+    "@typescript-eslint/parser": "^5.46.1",
+    "eslint": "^8.29.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-config-sanity": "^6.0.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-react": "^7.31.11",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "prettier": "^2.8.0",
+    "prettier": "^2.8.1",
     "prettier-plugin-packagejson": "^2.3.0",
     "react": "^18",
     "rimraf": "^3.0.2",
-    "sanity": "3.0.0-rc.3",
-    "typescript": "^4.9.3"
+    "sanity": "^3.0.0",
+    "typescript": "^4.9.4"
   },
   "peerDependencies": {
-    "@sanity/ui": "1.0.0-beta.32",
+    "@sanity/ui": "^1.0.0",
     "react": "^18",
-    "sanity": "dev-preview || 3.0.0-rc.3"
+    "sanity": "^3.0.0"
   },
   "engines": {
     "node": ">=14"
