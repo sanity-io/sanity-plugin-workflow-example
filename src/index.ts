@@ -7,7 +7,7 @@ import metadata from './schema/workflow/metadata'
 import {StateBadge} from './badges'
 import {PromoteAction} from './actions/PromoteAction'
 import {DemoteAction} from './actions/DemoteAction'
-import StateTimeline from './components/StateTimeline'
+//import StateTimeline from './components/StateTimeline'
 
 const DEFAULT_CONFIG: WorkflowConfig = {
   schemaTypes: [],

@@ -1,12 +1,8 @@
-import {
-  defineType,
-  defineField,
-  // SchemaTypeDefinition
-} from 'sanity'
-
+import {defineType, defineField, defineArrayMember} from 'sanity'
 // import UserSelectInput from '../../components/UserSelectInput'
 import {State} from '../../types'
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default (states: State[]) =>
   defineType({
     type: 'document',
@@ -35,7 +31,7 @@ export default (states: State[]) =>
         name: 'assignees',
         description:
           'The people who are assigned to move this further in the workflow.',
-        of: [{type: 'string'}],
+        of: [defineArrayMember({type: 'string'})],
         // components: {input: UserSelectInput},
       }),
     ],
