@@ -77,7 +77,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       return item.createOrReplace({
         _id: `workflow-metadata.${documentId}`,
         _type: 'workflow.metadata',
-        state: 'draft',
+        state: states[0].id,
         documentId,
       })
     }, client.transaction())
@@ -105,6 +105,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       const mutatingDoc = move(draggableId, destination, states)
 
       if (mutatingDoc) {
+        // @ts-ignore
+        // @todo not sure if these types should be updated. will documentId every be undefined here?
         setMutatingDocs((current) => [...current, mutatingDoc])
       }
     },
@@ -176,8 +178,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                       filterItemsByState(data, state.id).map((item, itemIndex) => (
                         // The metadata's documentId is always the published one
                         <Draggable
-                          key={item._metadata.documentId}
-                          draggableId={item._metadata.documentId}
+                          key={item?._metadata?.documentId as string}
+                          draggableId={item?._metadata?.documentId as string}
                           index={itemIndex}
                         >
                           {(draggableProvided, draggableSnapshot) => (

@@ -18,7 +18,10 @@ export default (states: State[]) =>
         name: 'state',
         type: 'string',
         options: {
-          list: states.map((state) => ({value: state.id, title: state.title})),
+          list: states.map((state) => ({
+            value: state.id,
+            title: state.title,
+          })),
         },
       }),
       defineField({

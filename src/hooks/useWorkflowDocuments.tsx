@@ -3,7 +3,6 @@ import {useListeningQuery} from 'sanity-plugin-utils'
 import {useToast} from '@sanity/ui'
 import {SanityDocumentLike, useClient} from 'sanity'
 import {DraggableLocation} from 'react-beautiful-dnd'
-
 import {SanityDocumentWithMetadata, Metadata, State} from '../types'
 
 type DocumentsAndMetadata = {
@@ -80,7 +79,7 @@ export function useWorkflowDocuments(schemaTypes: string[]) {
       // Optimistic update
       const currentLocalData = localDocuments
       const newLocalDocuments = localDocuments.map((item) => {
-        if (item._metadata.documentId === draggedId) {
+        if (item?._metadata?.documentId === draggedId) {
           return {
             ...item,
             _metadata: {
@@ -98,7 +97,7 @@ export function useWorkflowDocuments(schemaTypes: string[]) {
       // Now client-side update
       const newStateId = destination.droppableId
       const newState = states.find((s) => s.id === newStateId)
-      const document = localDocuments.find((d) => d._metadata.documentId === draggedId)
+      const document = localDocuments.find((d) => d?._metadata?.documentId === draggedId)
 
       if (!newState?.id) {
         toast.push({
@@ -120,11 +119,11 @@ export function useWorkflowDocuments(schemaTypes: string[]) {
       const {_id, _type} = document
 
       // Metadata + useDocumentOperation always uses Published id
-      const {_rev, documentId} = document._metadata
+      const {_rev, documentId} = document._metadata || {}
 
       client
         .patch(`workflow-metadata.${documentId}`)
-        .ifRevisionId(_rev)
+        .ifRevisionId(_rev as string)
         .set({state: newStateId})
         .commit()
         .then(() => {

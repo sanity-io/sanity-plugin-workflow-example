@@ -4,7 +4,7 @@ import {AddIcon, DragHandleIcon} from '@sanity/icons'
 import React, {useState} from 'react'
 import {useSchema, SchemaType} from 'sanity'
 import {UserSelectMenu} from 'sanity-plugin-utils'
-import {SanityPreview as Preview} from 'sanity'
+import {Preview} from 'sanity'
 
 import EditButton from './EditButton'
 import {SanityDocumentWithMetadata, User} from '../../types'
@@ -19,7 +19,7 @@ type DocumentCardProps = {
 
 export function DocumentCard(props: DocumentCardProps) {
   const {userList, isDragging, item} = props
-  const {assignees, documentId} = item._metadata ?? {}
+  const {assignees = [], documentId} = item._metadata ?? {}
   const schema = useSchema()
 
   const isDarkMode = useTheme().sanity.color.dark
@@ -61,7 +61,9 @@ export function DocumentCard(props: DocumentCardProps) {
 
           <Card padding={2} radius={2} tone="inherit">
             <Flex align="center" justify="space-between" gap={1}>
-              <UserAssignment userList={userList} assignees={assignees} documentId={documentId} />
+              {documentId && (
+                <UserAssignment userList={userList} assignees={assignees} documentId={documentId} />
+              )}
 
               <EditButton id={item._id} type={item._type} />
             </Flex>
