@@ -13,14 +13,22 @@ import {
 } from '@sanity/ui'
 import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
 import {Tool, useClient} from 'sanity'
-import {DragDropContext, Droppable, Draggable, DropResult} from 'react-beautiful-dnd'
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from 'react-beautiful-dnd'
 
 import {SanityDocumentWithMetadata, State} from '../types'
 import {DocumentCard} from './DocumentCard'
 import Mutate from './Mutate'
 import {useWorkflowDocuments} from '../hooks/useWorkflowDocuments'
 
-function filterItemsByState(items: SanityDocumentWithMetadata[], stateId: string) {
+function filterItemsByState(
+  items: SanityDocumentWithMetadata[],
+  stateId: string
+) {
   return items.filter((item) => item?._metadata?.state === stateId)
 }
 
@@ -138,7 +146,11 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       {mutatingDocs.length ? (
         <div style={{position: `absolute`, bottom: 0, background: 'red'}}>
           {mutatingDocs.map((mutate) => (
-            <Mutate key={mutate._id} {...mutate} onComplete={mutationFinished} />
+            <Mutate
+              key={mutate._id}
+              {...mutate}
+              onComplete={mutationFinished}
+            />
           ))}
         </div>
       ) : null}
@@ -146,9 +158,14 @@ export default function WorkflowTool(props: WorkflowToolProps) {
         <Box padding={5}>
           <Card border padding={3} tone="caution">
             <Flex align="center" justify="center">
-              <Button onClick={() => importDocuments(documentsWithoutMetadataIds)}>
+              <Button
+                onClick={() => importDocuments(documentsWithoutMetadataIds)}
+              >
                 Import {documentsWithoutMetadataIds.length} Missing{' '}
-                {documentsWithoutMetadataIds.length === 1 ? `Document` : `Documents`} into Workflow
+                {documentsWithoutMetadataIds.length === 1
+                  ? `Document`
+                  : `Documents`}{' '}
+                into Workflow
               </Button>
             </Flex>
           </Card>
@@ -175,28 +192,30 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                     ) : null}
 
                     {data.length > 0 &&
-                      filterItemsByState(data, state.id).map((item, itemIndex) => (
-                        // The metadata's documentId is always the published one
-                        <Draggable
-                          key={item?._metadata?.documentId as string}
-                          draggableId={item?._metadata?.documentId as string}
-                          index={itemIndex}
-                        >
-                          {(draggableProvided, draggableSnapshot) => (
-                            <div
-                              ref={draggableProvided.innerRef}
-                              {...draggableProvided.draggableProps}
-                              {...draggableProvided.dragHandleProps}
-                            >
-                              <DocumentCard
-                                isDragging={draggableSnapshot.isDragging}
-                                item={item}
-                                userList={userList}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
+                      filterItemsByState(data, state.id).map(
+                        (item, itemIndex) => (
+                          // The metadata's documentId is always the published one
+                          <Draggable
+                            key={item?._metadata?.documentId as string}
+                            draggableId={item?._metadata?.documentId as string}
+                            index={itemIndex}
+                          >
+                            {(draggableProvided, draggableSnapshot) => (
+                              <div
+                                ref={draggableProvided.innerRef}
+                                {...draggableProvided.draggableProps}
+                                {...draggableProvided.dragHandleProps}
+                              >
+                                <DocumentCard
+                                  isDragging={draggableSnapshot.isDragging}
+                                  item={item}
+                                  userList={userList}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        )
+                      )}
                   </Card>
                 )}
               </Droppable>

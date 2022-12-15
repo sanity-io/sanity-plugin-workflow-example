@@ -129,7 +129,9 @@ export default function UserAssignment(props: UserAssignmentProps) {
           mode="bleed"
           style={{width: `100%`}}
         >
-          <AvatarGroup users={userList.filter((u) => assignees.includes(u.id))} />
+          <AvatarGroup
+            users={userList.filter((u) => assignees.includes(u.id))}
+          />
         </Button>
       )}
     </Popover>

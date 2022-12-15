@@ -25,7 +25,9 @@ export default function StateTimeline(props: StateTimelineProps) {
 
   const {data, loading, error} = useWorkflowMetadata(documentId, states)
   const {state} = data
-  const [mutatingToState, setMutatingToState] = React.useState<string | null>(null)
+  const [mutatingToState, setMutatingToState] = React.useState<string | null>(
+    null
+  )
 
   const client = useClient()
   const toast = useToast()
@@ -76,7 +78,8 @@ export default function StateTimeline(props: StateTimelineProps) {
               fontSize={1}
               tone="primary"
               mode={
-                (!mutatingToState && s.id === state?.id) || s.id === mutatingToState
+                (!mutatingToState && s.id === state?.id) ||
+                s.id === mutatingToState
                   ? `default`
                   : `ghost`
               }

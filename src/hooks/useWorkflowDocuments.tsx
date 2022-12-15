@@ -31,13 +31,18 @@ const INITIAL_DATA: DocumentsAndMetadata = {
 export function useWorkflowDocuments(schemaTypes: string[]) {
   const toast = useToast()
   const client = useClient()
-  const [localDocuments, setLocalDocuments] = React.useState<SanityDocumentWithMetadata[]>([])
+  const [localDocuments, setLocalDocuments] = React.useState<
+    SanityDocumentWithMetadata[]
+  >([])
 
   // Get and listen to changes on documents + workflow metadata documents
-  const {data, loading, error} = useListeningQuery<DocumentsAndMetadata>(COMBINED_QUERY, {
-    params: {schemaTypes},
-    initialValue: INITIAL_DATA,
-  })
+  const {data, loading, error} = useListeningQuery<DocumentsAndMetadata>(
+    COMBINED_QUERY,
+    {
+      params: {schemaTypes},
+      initialValue: INITIAL_DATA,
+    }
+  )
 
   // Store local state for optimistic updates
   React.useEffect(() => {
@@ -46,7 +51,9 @@ export function useWorkflowDocuments(schemaTypes: string[]) {
       const documentsWithMetadata = data.documents.reduce(
         (acc: SanityDocumentWithMetadata[], cur) => {
           // Filter out documents without metadata
-          const curMeta = data.metadata.find((d) => d.documentId === cur._id.replace(`drafts.`, ``))
+          const curMeta = data.metadata.find(
+            (d) => d.documentId === cur._id.replace(`drafts.`, ``)
+          )
 
           // Add _metadata as null so it can be shown as a document that needs to be imported into workflow
           if (!curMeta) {
@@ -97,7 +104,9 @@ export function useWorkflowDocuments(schemaTypes: string[]) {
       // Now client-side update
       const newStateId = destination.droppableId
       const newState = states.find((s) => s.id === newStateId)
-      const document = localDocuments.find((d) => d?._metadata?.documentId === draggedId)
+      const document = localDocuments.find(
+        (d) => d?._metadata?.documentId === draggedId
+      )
 
       if (!newState?.id) {
         toast.push({
