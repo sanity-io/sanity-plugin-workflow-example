@@ -1,6 +1,7 @@
 import React from 'react'
 import {Card, useToast} from '@sanity/ui'
 import {useDocumentOperation} from 'sanity'
+
 import {State} from '../types'
 
 type MutateProps = {
@@ -18,7 +19,7 @@ export default function Mutate(props: MutateProps) {
 
   const toast = useToast()
 
-  if (isDraft && state.publish) {
+  if (isDraft && state.operation === 'publish') {
     if (!ops.publish.disabled) {
       ops.publish.execute()
       onComplete(_id)
@@ -28,7 +29,7 @@ export default function Mutate(props: MutateProps) {
         status: 'success',
       })
     }
-  } else if (!isDraft && state.unpublish) {
+  } else if (!isDraft && state.operation === 'unpublish') {
     if (!ops.unpublish.disabled) {
       ops.unpublish.execute()
       onComplete(_id)
