@@ -1,9 +1,13 @@
-import {defineType, defineField, SchemaTypeDefinition} from 'sanity'
+import {
+  defineType,
+  defineField,
+  // SchemaTypeDefinition
+} from 'sanity'
 
-import UserSelectInput from '../../components/UserSelectInput'
+// import UserSelectInput from '../../components/UserSelectInput'
 import {State} from '../../types'
 
-export default (states: State[]): SchemaTypeDefinition =>
+export default (states: State[]) =>
   defineType({
     type: 'document',
     name: 'workflow.metadata',
@@ -14,7 +18,10 @@ export default (states: State[]): SchemaTypeDefinition =>
         name: 'state',
         type: 'string',
         options: {
-          list: states.map((state) => ({value: state.id, title: state.title})),
+          list: states.map((state) => ({
+            value: state.id,
+            title: state.title,
+          })),
         },
       }),
       defineField({
@@ -28,7 +35,7 @@ export default (states: State[]): SchemaTypeDefinition =>
         name: 'assignees',
         description: 'The people who are assigned to move this further in the workflow.',
         of: [{type: 'string'}],
-        components: {input: UserSelectInput},
+        // components: {input: UserSelectInput},
       }),
     ],
   })
