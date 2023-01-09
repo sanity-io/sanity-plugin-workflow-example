@@ -26,9 +26,10 @@ Add it as a plugin in sanity.config.ts (or .js):
     // all other settings ...
      plugins: [
          workflow({
-            // Required
+            // Required, list of document type names
+            // schemaTypes: ['article', 'product'],
             schemaTypes: [],
-            // Optional
+            // Optional, see type definitions for the structure of these
             states: [],
          })
      ]
