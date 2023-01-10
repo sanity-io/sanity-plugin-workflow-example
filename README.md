@@ -38,13 +38,7 @@ Add it as a plugin in sanity.config.ts (or .js):
 
 ## License
 
-MIT © Simeon Griggs
-See LICENSE
-
-
-## License
-
-[MIT](LICENSE) © Simeon Griggs
+[MIT](LICENSE) © Sanity.io
 
 
 ## Develop & test
