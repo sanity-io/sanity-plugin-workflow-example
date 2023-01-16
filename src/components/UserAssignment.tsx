@@ -54,9 +54,9 @@ export default function UserAssignment(props: UserAssignmentProps) {
   )
 
   const removeAssignee = React.useCallback(
-    (id: string, userId: string) => {
+    (userId: string) => {
       client
-        .patch(`workflow-metadata.${id}`)
+        .patch(`workflow-metadata.${documentId}`)
         .unset([`assignees[@ == "${userId}"]`])
         .commit()
         .then((res) => res)
@@ -65,18 +65,18 @@ export default function UserAssignment(props: UserAssignmentProps) {
 
           return toast.push({
             title: `Failed to remove assignee`,
-            description: id,
+            description: userId,
             status: 'error',
           })
         })
     },
-    [client, toast]
+    [documentId, client, toast]
   )
 
   const clearAssignees = React.useCallback(
-    (id: string) => {
+    (userId: string) => {
       client
-        .patch(`workflow-metadata.${id}`)
+        .patch(`workflow-metadata.${documentId}`)
         .unset([`assignees`])
         .commit()
         .then((res) => res)
@@ -85,12 +85,12 @@ export default function UserAssignment(props: UserAssignmentProps) {
 
           return toast.push({
             title: `Failed to clear assignees`,
-            description: id,
+            description: userId,
             status: 'error',
           })
         })
     },
-    [client, toast]
+    [documentId, client, toast]
   )
 
   return (
