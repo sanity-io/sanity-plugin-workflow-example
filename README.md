@@ -2,16 +2,21 @@
 
 # sanity-plugin-workflow
 
+With Sanity Studio you can [customize your content tools to support arbitrary workflows like assignment and content pipelines](https://www.sanity.io/docs/custom-workflows).
+This plugin includes a reference implementation of these customization APIs as an example of how this can be done.
+
+This work is currently in **beta** and the aim is to implement previous workflows examples in V3 plugin form for those who do not wish to further customize, or as example code to show how these customizations are done.
+
 ## Installation
 
 ```
-npm install --save sanity-plugin-workflow
+npm install --save sanity-plugin-workflow@beta
 ```
 
 or
 
 ```
-yarn add sanity-plugin-workflow
+yarn add sanity-plugin-workflow@beta
 ```
 
 ## Usage
