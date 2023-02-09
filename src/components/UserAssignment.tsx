@@ -6,6 +6,7 @@ import {useClient} from 'sanity'
 
 import AvatarGroup from './DocumentCard/AvatarGroup'
 import {User} from '../types'
+import {API_VERSION} from '../constants'
 
 type UserAssignmentProps = {
   userList: User[]
@@ -15,7 +16,7 @@ type UserAssignmentProps = {
 
 export default function UserAssignment(props: UserAssignmentProps) {
   const {assignees, userList, documentId} = props
-  const client = useClient()
+  const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
   const [openId, setOpenId] = React.useState<string>(``)
 
@@ -28,7 +29,7 @@ export default function UserAssignment(props: UserAssignmentProps) {
         })
       }
 
-      client
+      return client
         .patch(`workflow-metadata.${documentId}`)
         .setIfMissing({assignees: []})
         .insert(`after`, `assignees[-1]`, [userId])
@@ -129,9 +130,7 @@ export default function UserAssignment(props: UserAssignmentProps) {
           mode="bleed"
           style={{width: `100%`}}
         >
-          <AvatarGroup
-            users={userList.filter((u) => assignees.includes(u.id))}
-          />
+          <AvatarGroup users={userList.filter((u) => assignees.includes(u.id))} />
         </Button>
       )}
     </Popover>

@@ -45,7 +45,6 @@ Add it as a plugin in sanity.config.ts (or .js):
 
 [MIT](LICENSE) © Sanity.io
 
-
 ## Develop & test
 
 This plugin uses [@sanity/plugin-kit](https://github.com/sanity-io/plugin-kit)

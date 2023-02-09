@@ -38,13 +38,7 @@ export function RequestReviewAction(props) {
   return {
     dialog: showWizardDialog && {
       type: 'popover',
-      content: (
-        <RequestReviewWizard
-          metadata={metadata.data}
-          onClose={onClose}
-          onSend={onSend}
-        />
-      ),
+      content: <RequestReviewWizard metadata={metadata.data} onClose={onClose} onSend={onSend} />,
       onClose: props.onComplete,
     },
     disabled: showWizardDialog,

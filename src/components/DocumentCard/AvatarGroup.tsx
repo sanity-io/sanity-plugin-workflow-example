@@ -13,10 +13,7 @@ export default function AvatarGroup(props: AvatarGroupProps) {
   const {users, max = 3} = props
 
   const len = users?.length
-  const visibleUsers = React.useMemo(
-    () => users.slice(0, max),
-    [users]
-  ) as User[]
+  const visibleUsers = React.useMemo(() => users.slice(0, max), [users, max]) as User[]
 
   if (!users?.length) {
     return null
