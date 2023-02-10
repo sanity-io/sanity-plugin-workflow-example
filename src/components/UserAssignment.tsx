@@ -103,7 +103,6 @@ export default function UserAssignment(props: UserAssignmentProps) {
     <Popover
       // @ts-ignore
       ref={setPopover}
-      // onKeyDown={handleKeyDown}
       content={
         <UserSelectMenu
           style={{maxHeight: 300}}

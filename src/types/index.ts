@@ -43,6 +43,7 @@ export type Metadata = SanityDocumentLike & {
   assignees: string[]
   documentId: string
   state: string
+  order: number
 }
 
 export type SanityDocumentWithMetadata = SanityDocumentLike & {

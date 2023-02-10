@@ -18,7 +18,8 @@ const METADATA_LIST_QUERY = groq`*[_type == "workflow.metadata"]{
   _rev,
   assignees,
   documentId,
-  state
+  state,
+  order
 }`
 
 const COMBINED_QUERY = groq`{
@@ -37,7 +38,14 @@ type WorkflowDocuments = {
     loading: boolean
     error: boolean
   }
-  operations: {move: (draggedId: string, destination: DraggableLocation, states: State[]) => void}
+  operations: {
+    move: (
+      draggedId: string,
+      destination: DraggableLocation,
+      states: State[],
+      newOrder: number
+    ) => void
+  }
 }
 
 export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
@@ -87,7 +95,7 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
   }, [data])
 
   const move = React.useCallback(
-    (draggedId: string, destination: DraggableLocation, states: State[]) => {
+    (draggedId: string, destination: DraggableLocation, states: State[], newOrder: number) => {
       // Optimistic update
       const currentLocalData = localDocuments
       const newLocalDocuments = localDocuments.map((item) => {
@@ -97,6 +105,7 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
             _metadata: {
               ...item._metadata,
               state: destination.droppableId,
+              order: newOrder,
             },
           }
         }
@@ -136,7 +145,7 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
       client
         .patch(`workflow-metadata.${documentId}`)
         .ifRevisionId(_rev as string)
-        .set({state: newStateId})
+        .set({state: newStateId, order: newOrder})
         .commit()
         .then(() => {
           return toast.push({

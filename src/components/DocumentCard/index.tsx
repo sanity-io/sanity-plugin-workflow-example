@@ -55,18 +55,6 @@ export function DocumentCard(props: DocumentCardProps) {
     }
   }
 
-  // Open/close handler
-  // const [popoverRef, setPopoverRef] = useState(null)
-  // const [openId, setOpenId] = useState<string | undefined>(``)
-
-  // useClickOutside(() => setOpenId(``), [popoverRef])
-
-  // const handleKeyDown = React.useCallback((e) => {
-  //   if (e.key === 'Escape') {
-  //     setOpenId(``)
-  //   }
-  // }, [])
-
   return (
     <Box paddingY={2} paddingX={3}>
       <Card radius={2} shadow={isDragging ? 3 : 1} tone={isDragging ? 'positive' : defaultCardTone}>
@@ -94,7 +82,6 @@ export function DocumentCard(props: DocumentCardProps) {
               {documentId && (
                 <UserAssignment userList={userList} assignees={assignees} documentId={documentId} />
               )}
-
               <EditButton id={item._id} type={item._type} />
             </Flex>
           </Card>

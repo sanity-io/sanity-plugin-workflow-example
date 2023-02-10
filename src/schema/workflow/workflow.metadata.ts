@@ -29,6 +29,11 @@ export default (states: State[]) =>
         readOnly: true,
       }),
       defineField({
+        name: 'order',
+        type: 'number',
+        readOnly: true,
+      }),
+      defineField({
         type: 'array',
         name: 'assignees',
         description: 'The people who are assigned to move this further in the workflow.',

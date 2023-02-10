@@ -1,6 +1,6 @@
 import {PropsWithChildren} from 'react'
 import styled, {css} from 'styled-components'
-import {Card} from '@sanity/ui'
+import {Card, Grid} from '@sanity/ui'
 import {motion, AnimatePresence} from 'framer-motion'
 
 const StyledFloatingCard = styled(Card)(
@@ -12,12 +12,14 @@ const StyledFloatingCard = styled(Card)(
 )
 
 export default function FloatingCard({children}: PropsWithChildren) {
+  const childrenHaveValues = Array.isArray(children) ? children.some(Boolean) : Boolean(children)
+
   return (
     <AnimatePresence>
-      {children ? (
+      {childrenHaveValues ? (
         <motion.div key="floater" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
           <StyledFloatingCard shadow={3} padding={3} margin={3} radius={3}>
-            {children}
+            <Grid gap={2}>{children}</Grid>
           </StyledFloatingCard>
         </motion.div>
       ) : null}
