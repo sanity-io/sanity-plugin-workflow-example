@@ -23,8 +23,8 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
       color: 'warning',
     },
     {
-      id: 'published',
-      title: 'Published',
+      id: 'live',
+      title: 'Live',
       operation: 'publish',
       color: 'success',
     },

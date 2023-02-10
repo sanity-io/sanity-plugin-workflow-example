@@ -1,5 +1,5 @@
 import React from 'react'
-import {Button, Popover, useToast} from '@sanity/ui'
+import {Button, Popover, useToast, useClickOutside} from '@sanity/ui'
 import {AddIcon} from '@sanity/icons'
 import {UserSelectMenu} from 'sanity-plugin-utils'
 import {useClient} from 'sanity'
@@ -18,7 +18,15 @@ export default function UserAssignment(props: UserAssignmentProps) {
   const {assignees, userList, documentId} = props
   const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
-  const [openId, setOpenId] = React.useState<string>(``)
+
+  const [button] = React.useState(null)
+  const [popover, setPopover] = React.useState(null)
+  const [isOpen, setIsOpen] = React.useState(false)
+
+  const close = React.useCallback(() => setIsOpen(false), [])
+  const open = React.useCallback(() => setIsOpen(true), [])
+
+  useClickOutside(close, [button, popover])
 
   const addAssignee = React.useCallback(
     (userId: string) => {
@@ -55,9 +63,9 @@ export default function UserAssignment(props: UserAssignmentProps) {
   )
 
   const removeAssignee = React.useCallback(
-    (id: string, userId: string) => {
+    (userId: string) => {
       client
-        .patch(`workflow-metadata.${id}`)
+        .patch(`workflow-metadata.${documentId}`)
         .unset([`assignees[@ == "${userId}"]`])
         .commit()
         .then((res) => res)
@@ -66,38 +74,35 @@ export default function UserAssignment(props: UserAssignmentProps) {
 
           return toast.push({
             title: `Failed to remove assignee`,
-            description: id,
+            description: documentId,
             status: 'error',
           })
         })
     },
-    [client, toast]
+    [client, toast, documentId]
   )
 
-  const clearAssignees = React.useCallback(
-    (id: string) => {
-      client
-        .patch(`workflow-metadata.${id}`)
-        .unset([`assignees`])
-        .commit()
-        .then((res) => res)
-        .catch((err) => {
-          console.error(err)
+  const clearAssignees = React.useCallback(() => {
+    client
+      .patch(`workflow-metadata.${documentId}`)
+      .unset([`assignees`])
+      .commit()
+      .then((res) => res)
+      .catch((err) => {
+        console.error(err)
 
-          return toast.push({
-            title: `Failed to clear assignees`,
-            description: id,
-            status: 'error',
-          })
+        return toast.push({
+          title: `Failed to clear assignees`,
+          description: documentId,
+          status: 'error',
         })
-    },
-    [client, toast]
-  )
+      })
+  }, [client, toast, documentId])
 
   return (
     <Popover
       // @ts-ignore
-      // ref={setPopoverRef}
+      ref={setPopover}
       // onKeyDown={handleKeyDown}
       content={
         <UserSelectMenu
@@ -107,15 +112,15 @@ export default function UserAssignment(props: UserAssignmentProps) {
           onAdd={addAssignee}
           onClear={clearAssignees}
           onRemove={removeAssignee}
-          open={openId === documentId}
+          open={isOpen}
         />
       }
       portal
-      open={openId === documentId}
+      open={isOpen}
     >
       {!assignees || assignees.length === 0 ? (
         <Button
-          onClick={() => setOpenId(documentId)}
+          onClick={open}
           fontSize={1}
           padding={2}
           tabIndex={-1}
@@ -124,12 +129,7 @@ export default function UserAssignment(props: UserAssignmentProps) {
           tone="positive"
         />
       ) : (
-        <Button
-          onClick={() => setOpenId(documentId)}
-          padding={0}
-          mode="bleed"
-          style={{width: `100%`}}
-        >
+        <Button onClick={open} padding={0} mode="bleed" style={{width: `100%`}}>
           <AvatarGroup users={userList.filter((u) => assignees.includes(u.id))} />
         </Button>
       )}

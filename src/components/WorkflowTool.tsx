@@ -1,25 +1,14 @@
 import React from 'react'
-import {
-  Flex,
-  Card,
-  Box,
-  Grid,
-  Spinner,
-  Label,
-  useToast,
-  Container,
-  useTheme,
-  Button,
-} from '@sanity/ui'
+import {Flex, Card, Grid, Spinner, Label, useToast, Container, useTheme, Button} from '@sanity/ui'
 import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
 import {Tool, useClient} from 'sanity'
 import {DragDropContext, Droppable, Draggable, DropResult} from 'react-beautiful-dnd'
 
 import {SanityDocumentWithMetadata, State, WorkflowConfig} from '../types'
 import {DocumentCard} from './DocumentCard'
-import Mutate from './Mutate'
 import {useWorkflowDocuments} from '../hooks/useWorkflowDocuments'
 import {API_VERSION} from '../constants'
+import FloatingCard from './FloatingCard'
 
 function filterItemsByState(items: SanityDocumentWithMetadata[], stateId: string) {
   return items.filter((item) => item?._metadata?.state === stateId)
@@ -29,20 +18,8 @@ type WorkflowToolProps = {
   tool: Tool<WorkflowConfig>
 }
 
-type MutationOps = {
-  _id: string
-  _type: string
-  state: State
-  documentId: string
-}
-
 export default function WorkflowTool(props: WorkflowToolProps) {
   const {schemaTypes = [], states = []} = props?.tool?.options ?? {}
-
-  const [mutatingDocs, setMutatingDocs] = React.useState<MutationOps[]>([])
-  const mutationFinished = React.useCallback((documentId: string) => {
-    setMutatingDocs((docs: MutationOps[]) => docs.filter((doc) => doc._id !== documentId))
-  }, [])
 
   const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
@@ -50,7 +27,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? 'default' : 'transparent'
 
-  const userList = useProjectUsers() || []
+  const userList = useProjectUsers({apiVersion: API_VERSION}) || []
   const {workflowData, operations} = useWorkflowDocuments(schemaTypes)
 
   // Data to display in cards
@@ -61,7 +38,16 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   const documentsWithoutMetadataIds = data?.length
     ? data.filter((doc) => !doc._metadata).map((d) => d._id.replace(`drafts.`, ``))
     : []
+  const documentsWithoutValidMetadataIds = data?.length
+    ? data.reduce((acc, cur) => {
+        const {documentId, state} = cur._metadata ?? {}
+        const stateExists = states.find((s) => s.id === state)
 
+        return !stateExists && documentId ? [...acc, documentId] : acc
+      }, [] as string[])
+    : []
+
+  // Creates metadata documents for those that do not have them
   const importDocuments = React.useCallback(
     async (ids: string[]) => {
       toast.push({
@@ -81,7 +67,31 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       await tx.commit()
 
       toast.push({
-        title: 'Imported documents',
+        title: `Imported ${ids.length === 1 ? `1 Document` : `${ids.length} Documents`}`,
+        status: 'success',
+      })
+    },
+    [client, states, toast]
+  )
+
+  // Updates metadata documents to a valid, existing state
+  const correctDocuments = React.useCallback(
+    async (ids: string[]) => {
+      toast.push({
+        title: 'Correcting documents',
+        status: 'info',
+      })
+
+      const tx = ids.reduce((item, documentId) => {
+        return item.patch(`workflow-metadata.${documentId}`, {
+          set: {state: states[0].id},
+        })
+      }, client.transaction())
+
+      await tx.commit()
+
+      toast.push({
+        title: `Corrected ${ids.length === 1 ? `1 Document` : `${ids.length} Documents`}`,
         status: 'success',
       })
     },
@@ -91,22 +101,12 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   const handleDragEnd = React.useCallback(
     (result: DropResult) => {
       const {draggableId, source, destination} = result
-      // console.log(
-      //   `sending ${draggableId} from ${source.droppableId} to ${destination?.droppableId}`
-      // )
 
       if (!destination || destination.droppableId === source.droppableId) {
         return
       }
 
-      // The list of mutating docs is how we un/publish documents
-      const mutatingDoc = move(draggableId, destination, states)
-
-      if (mutatingDoc) {
-        // @ts-ignore
-        // @todo not sure if these types should be updated. will documentId every be undefined here?
-        setMutatingDocs((current: MutationOps[]) => [...current, mutatingDoc])
-      }
+      move(draggableId, destination, states)
     },
     [move, states]
   )
@@ -133,16 +133,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
 
   return (
     <>
-      {mutatingDocs.length ? (
-        <div style={{position: `absolute`, bottom: 0, background: 'red'}}>
-          {mutatingDocs.map((mutate) => (
-            <Mutate key={mutate._id} {...mutate} onComplete={mutationFinished} />
-          ))}
-        </div>
-      ) : null}
-      {documentsWithoutMetadataIds.length > 0 && (
-        <Box padding={5} style={{backgroundColor: 'red'}}>
-          <Card border padding={3} tone="caution" style={{backgroundColor: 'red'}}>
+      <FloatingCard>
+        {documentsWithoutMetadataIds.length > 0 && (
+          <Card tone="caution">
             <Flex align="center" justify="center">
               <Button onClick={() => importDocuments(documentsWithoutMetadataIds)}>
                 Import {documentsWithoutMetadataIds.length} Missing{' '}
@@ -150,8 +143,19 @@ export default function WorkflowTool(props: WorkflowToolProps) {
               </Button>
             </Flex>
           </Card>
-        </Box>
-      )}
+        )}
+        {documentsWithoutValidMetadataIds.length > 0 && (
+          <Card tone="caution">
+            <Flex align="center" justify="center">
+              <Button onClick={() => correctDocuments(documentsWithoutValidMetadataIds)}>
+                Correct {documentsWithoutValidMetadataIds.length}
+                {` `}
+                {documentsWithoutValidMetadataIds.length === 1 ? `Document` : `Documents`} States
+              </Button>
+            </Flex>
+          </Card>
+        )}
+      </FloatingCard>
       <DragDropContext onDragEnd={handleDragEnd}>
         <Grid columns={states.length} height="fill">
           {states.map((state: State, stateIndex: number) => (
@@ -190,11 +194,13 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                                 isDragging={draggableSnapshot.isDragging}
                                 item={item}
                                 userList={userList}
+                                states={states}
                               />
                             </div>
                           )}
                         </Draggable>
                       ))}
+                    {provided.placeholder}
                   </Card>
                 )}
               </Droppable>

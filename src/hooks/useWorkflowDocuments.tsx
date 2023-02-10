@@ -37,7 +37,7 @@ type WorkflowDocuments = {
     loading: boolean
     error: boolean
   }
-  operations: {move: any}
+  operations: {move: (draggedId: string, destination: DraggableLocation, states: State[]) => void}
 }
 
 export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
