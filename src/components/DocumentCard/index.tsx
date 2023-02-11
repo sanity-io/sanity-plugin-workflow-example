@@ -8,6 +8,8 @@ import EditButton from './EditButton'
 import {SanityDocumentWithMetadata, State, User} from '../../types'
 import UserAssignment from '../UserAssignment'
 import {useMemo} from 'react'
+import {DraftStatus} from './core/DraftStatus'
+import {PublishedStatus} from './core/PublishedStatus'
 
 type DocumentCardProps = {
   userList: User[]
@@ -35,7 +37,7 @@ export function DocumentCard(props: DocumentCardProps) {
 
   const toast = useToast()
 
-  if (isDraft && currentState?.operation === 'publish') {
+  if (isDraft && currentState?.operation === 'publish' && !item?._metadata?.optimistic) {
     if (!ops.publish.disabled) {
       ops.publish.execute()
       toast.push({
@@ -44,7 +46,7 @@ export function DocumentCard(props: DocumentCardProps) {
         status: 'success',
       })
     }
-  } else if (!isDraft && currentState?.operation === 'unpublish') {
+  } else if (!isDraft && currentState?.operation === 'unpublish' && !item?._metadata?.optimistic) {
     if (!ops.unpublish.disabled) {
       ops.unpublish.execute()
       toast.push({
@@ -73,7 +75,13 @@ export function DocumentCard(props: DocumentCardProps) {
                 value={item}
                 schemaType={schema.get(item._type) as SchemaType}
               />
-              <DragHandleIcon style={{flexShrink: 0}} />
+
+              <Flex gap={3} style={{flexShrink: 0}} align="center">
+                <DraftStatus document={item} />
+                <PublishedStatus document={item} />
+
+                <DragHandleIcon />
+              </Flex>
             </Flex>
           </Card>
 

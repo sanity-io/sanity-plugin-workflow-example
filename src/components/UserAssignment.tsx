@@ -126,6 +126,7 @@ export default function UserAssignment(props: UserAssignmentProps) {
           icon={AddIcon}
           text="Assign"
           tone="positive"
+          mode="ghost"
         />
       ) : (
         <Button onClick={open} padding={0} mode="bleed" style={{width: `100%`}}>

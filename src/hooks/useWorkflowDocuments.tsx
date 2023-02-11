@@ -13,7 +13,7 @@ type DocumentsAndMetadata = {
   metadata: Metadata[]
 }
 
-const DOCUMENT_LIST_QUERY = groq`*[_type in $schemaTypes]{ _id, _type, _rev }`
+const DOCUMENT_LIST_QUERY = groq`*[_type in $schemaTypes]{ _id, _type, _rev, _updatedAt }`
 const METADATA_LIST_QUERY = groq`*[_type == "workflow.metadata"]{
   _rev,
   assignees,
@@ -106,6 +106,11 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
               ...item._metadata,
               state: destination.droppableId,
               order: newOrder,
+              // This never should be written to the document
+              // It's done so that un/publish operations don't happen twice
+              // Because a moved document's card will update once optimistically
+              // and then again when the document is updated
+              optimistic: true,
             },
           }
         }
