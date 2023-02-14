@@ -47,6 +47,29 @@ Add it as a plugin in sanity.config.ts (or .js):
  })
 ```
 
+## Configuring "States"
+
+The plugin comes with a default set of five "States". These are tracked by the plugin creating a separate "metadata" document for each document in the workflow. 
+
+Documents can be promoted and demoted in the workflow with the provided Document Actions as well as a drag-and-drop interface. The settings below are not enforced by the API, custom access control rules could be used to enforce them. 
+
+```ts
+{
+    // Required configuration
+    id: 'live',
+    title: 'Live',
+    // Optional settings:
+    // Will un/publish the document when moved to this state
+    operation: 'publish', // or 'unpublish'
+    // Used for the color of the document badge
+    color: 'success',
+    // Will disable document actions and drag-and-drop for any other users
+    roles: ['editor', 'administrator'],
+    // Requires the user to be "assigned" in order to update to this state
+    requireAssignment: true,
+}
+```
+
 ## License
 
 [MIT](LICENSE) © Sanity.io

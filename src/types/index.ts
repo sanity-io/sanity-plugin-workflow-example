@@ -1,13 +1,15 @@
-import React from 'react'
 import {SanityDocumentLike} from 'sanity'
+
+export type Operation = 'publish' | 'unpublish'
 
 export type State = {
   id: string
   title: string
-  operation?: 'publish' | 'unpublish' | null
+  operation?: Operation
+  roles?: string[]
+  requireAssignment?: boolean
   // From badge props
   color?: 'primary' | 'success' | 'warning' | 'danger'
-  icon?: React.ReactNode | React.ComponentType
 }
 
 export type WorkflowConfig = {

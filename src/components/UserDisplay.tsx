@@ -1,5 +1,5 @@
 import React from 'react'
-import {Button, Popover, useClickOutside} from '@sanity/ui'
+import {Button, Grid, Popover, useClickOutside} from '@sanity/ui'
 import {AddIcon} from '@sanity/icons'
 
 import AvatarGroup from './DocumentCard/AvatarGroup'
@@ -10,10 +10,11 @@ type UserDisplayProps = {
   userList: User[]
   assignees: string[]
   documentId: string
+  disabled?: boolean
 }
 
 export default function UserDisplay(props: UserDisplayProps) {
-  const {assignees, userList, documentId} = props
+  const {assignees, userList, documentId, disabled = false} = props
 
   const [button] = React.useState(null)
   const [popover, setPopover] = React.useState(null)
@@ -49,11 +50,14 @@ export default function UserDisplay(props: UserDisplayProps) {
           text="Assign"
           tone="positive"
           mode="ghost"
+          disabled={disabled}
         />
       ) : (
-        <Button onClick={open} padding={0} mode="bleed" style={{width: `100%`}}>
-          <AvatarGroup users={userList.filter((u) => assignees.includes(u.id))} />
-        </Button>
+        <Grid>
+          <Button onClick={open} padding={0} mode="bleed" disabled={disabled}>
+            <AvatarGroup users={userList.filter((u) => assignees.includes(u.id))} />
+          </Button>
+        </Grid>
       )}
     </Popover>
   )

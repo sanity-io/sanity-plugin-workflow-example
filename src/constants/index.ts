@@ -1,5 +1,3 @@
-import {CheckmarkIcon} from '@sanity/icons'
-
 import {WorkflowConfig} from '../types'
 
 export const API_VERSION = `2023-01-01`
@@ -10,26 +8,37 @@ export const ORDER_MIN = 10000
 export const DEFAULT_CONFIG: WorkflowConfig = {
   schemaTypes: [],
   states: [
-    {id: 'draft', title: 'Draft', operation: 'unpublish'},
-    {id: 'inReview', title: 'In review', operation: null, color: 'primary'},
     {
-      id: 'approved',
-      title: 'Approved',
-      operation: null,
-      color: 'success',
-      icon: CheckmarkIcon,
+      id: 'staged',
+      title: 'Staged',
+      operation: 'unpublish',
+      roles: ['editor', 'administrator'],
+    },
+    {
+      id: 'inReview',
+      title: 'In review',
+      color: 'primary',
+      roles: ['editor', 'administrator'],
     },
     {
       id: 'changesRequested',
       title: 'Changes requested',
-      operation: null,
       color: 'warning',
+      roles: ['editor', 'administrator'],
     },
     {
-      id: 'live',
-      title: 'Live',
+      id: 'approved',
+      title: 'Approved',
+      color: 'success',
+      roles: ['administrator'],
+    },
+    {
+      id: 'released',
+      title: 'Released',
       operation: 'publish',
       color: 'success',
+      roles: ['administrator'],
+      requireAssignment: true,
     },
   ],
 }

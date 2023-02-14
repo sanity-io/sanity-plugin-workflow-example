@@ -10,9 +10,11 @@ import {SanityDocumentWithMetadata, State, User} from '../../types'
 import UserDisplay from '../UserDisplay'
 import {DraftStatus} from './core/DraftStatus'
 import {PublishedStatus} from './core/PublishedStatus'
+import {ValidationStatus} from './ValidationStatus'
 
 type DocumentCardProps = {
   isDragDisabled: boolean
+  userRoleCanDrop: boolean
   isDragging: boolean
   item: SanityDocumentWithMetadata
   states: State[]
@@ -21,7 +23,15 @@ type DocumentCardProps = {
 }
 
 export function DocumentCard(props: DocumentCardProps) {
-  const {isDragDisabled, isDragging, item, states, toggleInvalidDocumentId, userList} = props
+  const {
+    isDragDisabled,
+    userRoleCanDrop,
+    isDragging,
+    item,
+    states,
+    toggleInvalidDocumentId,
+    userList,
+  } = props
   const {assignees = [], documentId} = item._metadata ?? {}
   const schema = useSchema()
   const currentState = useMemo(
@@ -63,6 +73,7 @@ export function DocumentCard(props: DocumentCardProps) {
   const cardTone = useMemo(() => {
     let tone: CardTone = defaultCardTone
 
+    if (!userRoleCanDrop) return isDarkMode ? `default` : `transparent`
     if (!documentId) return tone
     if (isDragging) tone = `positive`
 
@@ -79,7 +90,19 @@ export function DocumentCard(props: DocumentCardProps) {
     }
 
     return tone
-  }, [defaultCardTone, documentId, isDragging, toggleInvalidDocumentId, validation.validation])
+  }, [
+    isDarkMode,
+    userRoleCanDrop,
+    defaultCardTone,
+    documentId,
+    isDragging,
+    toggleInvalidDocumentId,
+    validation.validation,
+  ])
+
+  const hasError = validation.isValidating
+    ? false
+    : validation.validation.some((v) => v.level === 'error')
 
   return (
     <Box paddingY={2} paddingX={3}>
@@ -90,7 +113,7 @@ export function DocumentCard(props: DocumentCardProps) {
             radius={2}
             padding={3}
             paddingLeft={2}
-            tone="inherit"
+            tone={cardTone}
             style={{pointerEvents: 'none'}}
           >
             <Flex align="center" justify="space-between" gap={1}>
@@ -101,7 +124,7 @@ export function DocumentCard(props: DocumentCardProps) {
               />
 
               <Box style={{flexShrink: 0}}>
-                {isDragDisabled && !validation.isValidating ? null : <DragHandleIcon />}
+                {hasError || isDragDisabled ? null : <DragHandleIcon />}
               </Box>
             </Flex>
           </Card>
@@ -110,13 +133,19 @@ export function DocumentCard(props: DocumentCardProps) {
             <Flex align="center" justify="space-between" gap={3}>
               <Box flex={1}>
                 {documentId && (
-                  <UserDisplay userList={userList} assignees={assignees} documentId={documentId} />
+                  <UserDisplay
+                    userList={userList}
+                    assignees={assignees}
+                    documentId={documentId}
+                    disabled={!userRoleCanDrop}
+                  />
                 )}
               </Box>
+              <ValidationStatus validation={validation.validation} />
 
               <DraftStatus document={item} />
               <PublishedStatus document={item} />
-              <EditButton id={item._id} type={item._type} />
+              <EditButton id={item._id} type={item._type} disabled={!userRoleCanDrop} />
             </Flex>
           </Card>
         </Stack>

@@ -28,7 +28,6 @@ export function AssignAction(props: DocumentActionProps, states: State[]) {
       onClose: () => {
         setDialogOpen(false)
       },
-      header: 'Edit title field',
       content: (
         <UserAssignment
           userList={userList}

@@ -1,4 +1,3 @@
-import React from 'react'
 import {Button} from '@sanity/ui'
 import {EditIcon} from '@sanity/icons'
 import {useRouter} from 'sanity/router'
@@ -6,10 +5,11 @@ import {useRouter} from 'sanity/router'
 type EditButtonProps = {
   id: string
   type: string
+  disabled?: boolean
 }
 
 export default function EditButton(props: EditButtonProps) {
-  const {id, type} = props
+  const {id, type, disabled = false} = props
   const {navigateIntent} = useRouter()
 
   return (
@@ -22,6 +22,7 @@ export default function EditButton(props: EditButtonProps) {
       tabIndex={-1}
       icon={EditIcon}
       text="Edit"
+      disabled={disabled}
     />
   )
 }

@@ -1,9 +1,8 @@
 import {definePlugin} from 'sanity'
 
-import StateTimeline, {StateTimelineProps} from './components/StateTimeline'
+// import StateTimeline, {StateTimelineProps} from './components/StateTimeline'
 import {DEFAULT_CONFIG} from './constants'
-import {DemoteAction} from './actions/DemoteAction'
-import {PromoteAction} from './actions/PromoteAction'
+import {UpdateStateAction} from './actions/UpdateStateAction'
 import {StateBadge} from './badges'
 import {WorkflowConfig} from './types'
 import {workflowTool} from './tools'
@@ -22,41 +21,42 @@ export const workflow = definePlugin<WorkflowConfig>((config = DEFAULT_CONFIG) =
     schema: {
       types: [metadata(states)],
     },
-    form: {
-      components: {
-        input: (props) => {
-          if (
-            props?.schemaType?.type?.name === 'document' &&
-            schemaTypes.includes(props.schemaType.name)
-          ) {
-            const newProps = {...props, states}
-
-            // TODO: Fix this type
-            return StateTimeline(newProps as StateTimelineProps)
-          }
-          return props.renderDefault(props)
-        },
-      },
-    },
+    // Removed StateTimeline since the Document Actions can handle the same logic, may revisit
+    // form: {
+    //   components: {
+    //     input: (props) => {
+    //       if (
+    //         props?.schemaType?.type?.name === 'document' &&
+    //         schemaTypes.includes(props.schemaType.name)
+    //       ) {
+    //         const newProps = {...props, states}
+    //         return StateTimeline(newProps as StateTimelineProps)
+    //       }
+    //       return props.renderDefault(props)
+    //     },
+    //   },
+    // },
     document: {
       actions: (prev, context) => {
         if (!schemaTypes.includes(context.schemaType)) {
           return prev
         }
 
-        let filtered = prev
+        let filteredPrev = prev
 
         // If any workflow states make use of un/publish operations...
         if (states.some((state) => state.operation)) {
           // ...remove 'discard changes' and 'publish' actions
-          filtered = prev.filter(({action}) => action && !['publish', 'unpublish'].includes(action))
+          filteredPrev = prev.filter(
+            ({action}) => action && !['publish', 'unpublish'].includes(action)
+          )
         }
 
         return [
+          (props) => UpdateStateAction(props, states, 'promote'),
           (props) => AssignAction(props, states),
-          (props) => PromoteAction(props, states),
-          (props) => DemoteAction(props, states),
-          ...filtered,
+          (props) => UpdateStateAction(props, states, 'demote'),
+          ...filteredPrev,
         ]
       },
       badges: (prev, context) => {

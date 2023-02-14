@@ -1,46 +1,25 @@
 import React from 'react'
-import {Box, Flex, Card, Grid, Spinner, Label, Container, useTheme, Button} from '@sanity/ui'
+import {Flex, Card, Grid, Spinner, Label, Container, useTheme} from '@sanity/ui'
 import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
-import {Tool, UserAvatar, useSchema} from 'sanity'
-import {ResetIcon} from '@sanity/icons'
-import {DragDropContext, Droppable, Draggable, DropResult} from 'react-beautiful-dnd'
+import {Tool, useCurrentUser} from 'sanity'
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+  DragStart,
+  ResponderProvided,
+} from 'react-beautiful-dnd'
 
-import {SanityDocumentWithMetadata, State, WorkflowConfig} from '../types'
+import {State, WorkflowConfig} from '../types'
 import {DocumentCard} from './DocumentCard'
 import {useWorkflowDocuments} from '../hooks/useWorkflowDocuments'
 import {API_VERSION, ORDER_MAX, ORDER_MIN} from '../constants'
 
 import Validators from './Validators'
-
-function filterItemsByStateAndUserAndSort(
-  items: SanityDocumentWithMetadata[],
-  stateId: string,
-  selectedUsers: string[],
-  selectedSchemaTypes: string[]
-) {
-  return (
-    items
-      // Only items of this state
-      .filter((item) => item?._metadata?.state === stateId)
-      // Only items with selected users, if the document has any assigned users
-      .filter((item) =>
-        selectedUsers.length && item._metadata?.assignees.length
-          ? item._metadata?.assignees.some((assignee) => selectedUsers.includes(assignee))
-          : !selectedUsers.length
-      )
-      // Only items of selected schema types, if any are selected
-      .filter((item) =>
-        selectedSchemaTypes.length ? selectedSchemaTypes.includes(item._type) : true
-      )
-      // Sort by metadata order
-      .sort((a, b) => {
-        const aOrder = a?._metadata?.order ?? 0
-        const bOrder = b?._metadata?.order ?? 0
-
-        return aOrder - bOrder
-      })
-  )
-}
+import Filters from './Filters'
+import {filterItemsAndSort} from '../helpers/filterItemsAndSort'
+import {arraysContainMatchingString} from '../helpers/arraysContainMatchingString'
 
 type WorkflowToolProps = {
   tool: Tool<WorkflowConfig>
@@ -49,11 +28,14 @@ type WorkflowToolProps = {
 export default function WorkflowTool(props: WorkflowToolProps) {
   const {schemaTypes = [], states = []} = props?.tool?.options ?? {}
 
-  const schema = useSchema()
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? 'default' : 'transparent'
 
   const userList = useProjectUsers({apiVersion: API_VERSION})
+
+  const user = useCurrentUser()
+  const userRoleNames = user?.roles?.length ? user?.roles.map((r) => r.name) : []
+
   const {workflowData, operations} = useWorkflowDocuments(schemaTypes)
 
   // Data to display in cards
@@ -62,8 +44,39 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   // Operations to perform on cards
   const {move} = operations
 
+  const [undroppableStates, setUndroppableStates] = React.useState<string[]>([])
+
+  // When drag starts, check for any states that require user assignment
+  // If so, block them if the currently dragged document is not assigned to the user
+  const handleDragStart = React.useCallback(
+    (start: DragStart, provided: ResponderProvided) => {
+      const {draggableId} = start
+
+      const document = data.find((item) => item._metadata?.documentId === draggableId)
+
+      if (!document) return
+
+      const statesThatRequireAssignmentIds = states
+        .filter((state) => state.requireAssignment)
+        .map((state) => state.id)
+
+      if (!statesThatRequireAssignmentIds.length) return
+
+      const documentAssignees = document._metadata?.assignees ?? []
+      const userIsAssignedToDocument = user?.id ? documentAssignees.includes(user.id) : false
+
+      if (!userIsAssignedToDocument) {
+        setUndroppableStates(statesThatRequireAssignmentIds)
+      }
+    },
+    [data, states, user]
+  )
+
   const handleDragEnd = React.useCallback(
     (result: DropResult) => {
+      // Reset undroppable states
+      setUndroppableStates([])
+
       const {draggableId, source, destination} = result
 
       if (
@@ -76,9 +89,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       }
 
       // Find all items in current state
-      const destinationStateItems = [
-        ...filterItemsByStateAndUserAndSort(data, destination.droppableId, [], []),
-      ]
+      const destinationStateItems = [...filterItemsAndSort(data, destination.droppableId, [], [])]
 
       // TODO: This ordering logic is naive, and could be improved
       let newOrder = ORDER_MIN
@@ -120,7 +131,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       return assignees?.length ? Array.from(new Set([...acc, ...assignees])) : acc
     }, [] as string[])
 
-    return userList.filter((user) => uniqueUserIds.includes(user.id))
+    return userList.filter((u) => uniqueUserIds.includes(u.id))
   }, [data, userList])
 
   const [selectedUsers, setSelectedUsers] = React.useState<any[]>(uniqueAssignedUsers)
@@ -128,6 +139,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     setSelectedUsers((prev) =>
       prev.includes(userId) ? prev.filter((u) => u !== userId) : [...prev, userId]
     )
+  }, [])
+  const resetSelectedUsers = React.useCallback(() => {
+    setSelectedUsers([])
   }, [])
 
   const [selectedSchemaTypes, setSelectedSchemaTypes] = React.useState<string[]>(schemaTypes)
@@ -167,113 +181,101 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   return (
     <>
       <Validators data={data} userList={userList} states={states} />
-      <Card tone="primary" padding={2} borderBottom style={{overflowX: 'hidden'}}>
-        <Flex justify="space-between">
-          {uniqueAssignedUsers.length > 0 ? (
-            <Flex align="center" gap={1}>
-              {uniqueAssignedUsers.map((user) => (
-                <Button
-                  key={user.id}
-                  padding={1}
-                  mode={selectedUsers.includes(user.id) ? `default` : `bleed`}
-                  onClick={() => toggleSelectedUser(user.id)}
-                >
-                  <UserAvatar user={user} size={1} />
-                </Button>
-              ))}
-
-              {selectedUsers.length > 0 ? (
-                <Card borderLeft marginLeft={2} paddingLeft={3} tone="inherit">
-                  <Button
-                    text="Clear"
-                    onClick={() => setSelectedUsers([])}
-                    mode="ghost"
-                    icon={ResetIcon}
-                  />
-                </Card>
-              ) : null}
-            </Flex>
-          ) : (
-            <Box flex={1} />
-          )}
-          {schemaTypes.length > 0 ? (
-            <Flex align="center" gap={1}>
-              {schemaTypes.map((type) => (
-                <Button
-                  key={type}
-                  text={schema.get(type)?.title ?? type}
-                  icon={schema.get(type)?.icon ?? undefined}
-                  mode={selectedSchemaTypes.includes(type) ? `default` : `ghost`}
-                  fontSize={2}
-                  onClick={() => toggleSelectedSchemaType(type)}
-                />
-              ))}
-            </Flex>
-          ) : null}
-        </Flex>
-      </Card>
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <Filters
+        uniqueAssignedUsers={uniqueAssignedUsers}
+        selectedUsers={selectedUsers}
+        toggleSelectedUser={toggleSelectedUser}
+        resetSelectedUsers={resetSelectedUsers}
+        schemaTypes={schemaTypes}
+        selectedSchemaTypes={selectedSchemaTypes}
+        toggleSelectedSchemaType={toggleSelectedSchemaType}
+      />
+      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <Grid columns={states.length} height="fill">
-          {states.map((state: State, stateIndex: number) => (
-            <Card key={state.id} borderLeft={stateIndex > 0} tone={defaultCardTone}>
-              <Card paddingY={3} padding={3} style={{pointerEvents: `none`}}>
-                <Label>{state.title}</Label>
-              </Card>
-              <Droppable droppableId={state.id}>
-                {(provided, snapshot) => (
-                  <Card
-                    ref={provided.innerRef}
-                    tone={snapshot.isDraggingOver ? `primary` : defaultCardTone}
-                    height="fill"
-                  >
-                    {loading ? (
-                      <Flex padding={5} align="center" justify="center">
-                        <Spinner muted />
-                      </Flex>
-                    ) : null}
+          {states.map((state: State, stateIndex: number) => {
+            const userRoleCanDrop = state?.roles?.length
+              ? arraysContainMatchingString(state.roles, userRoleNames)
+              : true
+            // const stateTone = userRoleCanDrop ? defaultCardTone : `caution`
 
-                    {data.length > 0 &&
-                      filterItemsByStateAndUserAndSort(
-                        data,
-                        state.id,
-                        selectedUsers,
-                        selectedSchemaTypes
-                      ).map((item, itemIndex) => (
-                        // The metadata's documentId is always the published one
-                        <Draggable
-                          key={item?._metadata?.documentId as string}
-                          draggableId={item?._metadata?.documentId as string}
-                          index={itemIndex}
-                          isDragDisabled={invalidDocumentIds.includes(
-                            item?._metadata?.documentId as string
-                          )}
-                        >
-                          {(draggableProvided, draggableSnapshot) => (
-                            <div
-                              ref={draggableProvided.innerRef}
-                              {...draggableProvided.draggableProps}
-                              {...draggableProvided.dragHandleProps}
-                            >
-                              <DocumentCard
-                                isDragDisabled={invalidDocumentIds.includes(
-                                  item?._metadata?.documentId as string
+            return (
+              <Card key={state.id} borderLeft={stateIndex > 0} tone={defaultCardTone}>
+                <Card
+                  // __unstable_checkered={!userRoleCanDrop}
+                  padding={3}
+                  style={{pointerEvents: `none`}}
+                >
+                  <Label muted={!userRoleCanDrop}>{state.title}</Label>
+                </Card>
+                <Droppable
+                  droppableId={state.id}
+                  isDropDisabled={!userRoleCanDrop || undroppableStates.includes(state.id)}
+                >
+                  {(provided, snapshot) => (
+                    <Card
+                      // __unstable_checkered={!userRoleCanDrop}
+                      ref={provided.innerRef}
+                      tone={snapshot.isDraggingOver ? `primary` : defaultCardTone}
+                      height="fill"
+                    >
+                      {loading ? (
+                        <Flex padding={5} align="center" justify="center">
+                          <Spinner muted />
+                        </Flex>
+                      ) : null}
+
+                      {data.length > 0 &&
+                        filterItemsAndSort(data, state.id, selectedUsers, selectedSchemaTypes).map(
+                          (item, itemIndex) => {
+                            const isInvalid = invalidDocumentIds.includes(
+                              String(item?._metadata?.documentId)
+                            )
+                            const meInAssignees = user?.id
+                              ? item?._metadata?.assignees?.includes(user.id)
+                              : false
+                            const isDragDisabled =
+                              !userRoleCanDrop ||
+                              isInvalid ||
+                              !(state.requireAssignment
+                                ? state.requireAssignment && meInAssignees
+                                : true)
+
+                            return (
+                              <Draggable
+                                // The metadata's documentId is always the published one to avoid rerendering
+                                key={String(item?._metadata?.documentId)}
+                                draggableId={String(item?._metadata?.documentId)}
+                                index={itemIndex}
+                                isDragDisabled={isDragDisabled}
+                              >
+                                {(draggableProvided, draggableSnapshot) => (
+                                  <div
+                                    ref={draggableProvided.innerRef}
+                                    {...draggableProvided.draggableProps}
+                                    {...draggableProvided.dragHandleProps}
+                                  >
+                                    <DocumentCard
+                                      userRoleCanDrop={userRoleCanDrop}
+                                      isDragDisabled={isDragDisabled}
+                                      isDragging={draggableSnapshot.isDragging}
+                                      item={item}
+                                      states={states}
+                                      toggleInvalidDocumentId={toggleInvalidDocumentId}
+                                      userList={userList}
+                                    />
+                                  </div>
                                 )}
-                                isDragging={draggableSnapshot.isDragging}
-                                item={item}
-                                states={states}
-                                toggleInvalidDocumentId={toggleInvalidDocumentId}
-                                userList={userList}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                    {provided.placeholder}
-                  </Card>
-                )}
-              </Droppable>
-            </Card>
-          ))}
+                              </Draggable>
+                            )
+                          }
+                        )}
+                      {provided.placeholder}
+                    </Card>
+                  )}
+                </Droppable>
+              </Card>
+            )
+          })}
         </Grid>
       </DragDropContext>
     </>
