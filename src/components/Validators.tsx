@@ -3,7 +3,7 @@ import {useToast, Button} from '@sanity/ui'
 import {useClient} from 'sanity'
 
 import FloatingCard from './FloatingCard'
-import {API_VERSION} from '../constants'
+import {API_VERSION, ORDER_MIN} from '../constants'
 import {SanityDocumentWithMetadata, State} from '../types'
 
 type ValidatorsProps = {
@@ -28,6 +28,7 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
         return !stateExists && documentId ? [...acc, documentId] : acc
       }, [] as string[])
     : []
+
   const documentsWithoutValidUsersIds = data?.length
     ? data.reduce((acc, cur) => {
         const {documentId, assignees} = cur._metadata ?? {}
@@ -36,6 +37,7 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
         return !assigneesExist && documentId ? [...acc, documentId] : acc
       }, [] as string[])
     : []
+
   const documentsWithoutOrderIds = data?.length
     ? data.reduce((acc, cur) => {
         const {documentId, order} = cur._metadata ?? {}
@@ -133,8 +135,8 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
         status: 'info',
       })
 
-      // TODO: This doesn't consider the order of other documents
-      const startingValue = 10000
+      // TODO: Attempt to use existing document orders
+      const startingValue = ORDER_MIN * 2
       const tx = ids.reduce((item, documentId, itemIndex) => {
         return item.patch(`workflow-metadata.${documentId}`, {
           set: {order: startingValue + itemIndex * 1000},
@@ -197,6 +199,11 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
           }
         />
       ) : null}
+      {/* <Button
+        tone="caution"
+        onClick={() => addOrderToDocuments(data.map((doc) => String(doc._metadata?.documentId)))}
+        text="Reset order"
+      /> */}
     </FloatingCard>
   )
 }

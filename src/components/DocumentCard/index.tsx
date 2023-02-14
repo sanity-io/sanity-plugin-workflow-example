@@ -1,34 +1,33 @@
 /* eslint-disable react/prop-types */
-import {Box, Card, Flex, Stack, useTheme, useToast} from '@sanity/ui'
+import {useMemo} from 'react'
+import {Box, Card, CardTone, Flex, Stack, useTheme, useToast} from '@sanity/ui'
 import {DragHandleIcon} from '@sanity/icons'
-import {useSchema, SchemaType, useDocumentOperation} from 'sanity'
+import {useSchema, SchemaType, useDocumentOperation, useValidationStatus} from 'sanity'
 import {Preview} from 'sanity'
 
 import EditButton from './EditButton'
 import {SanityDocumentWithMetadata, State, User} from '../../types'
-import UserAssignment from '../UserAssignment'
-import {useMemo} from 'react'
+import UserDisplay from '../UserDisplay'
 import {DraftStatus} from './core/DraftStatus'
 import {PublishedStatus} from './core/PublishedStatus'
 
 type DocumentCardProps = {
-  userList: User[]
+  isDragDisabled: boolean
   isDragging: boolean
   item: SanityDocumentWithMetadata
   states: State[]
+  toggleInvalidDocumentId: (documentId: string, action: 'ADD' | 'REMOVE') => void
+  userList: User[]
 }
 
 export function DocumentCard(props: DocumentCardProps) {
-  const {userList, isDragging, item, states} = props
+  const {isDragDisabled, isDragging, item, states, toggleInvalidDocumentId, userList} = props
   const {assignees = [], documentId} = item._metadata ?? {}
   const schema = useSchema()
   const currentState = useMemo(
     () => states.find((state) => state.id === item._metadata?.state),
     [states, item._metadata?.state]
   )
-
-  const isDarkMode = useTheme().sanity.color.dark
-  const defaultCardTone = isDarkMode ? 'transparent' : 'default'
 
   // Perform operation
   // If state has changed and the document needs to be un/published
@@ -37,6 +36,7 @@ export function DocumentCard(props: DocumentCardProps) {
 
   const toast = useToast()
 
+  // Perform document operations after state changes
   if (isDraft && currentState?.operation === 'publish' && !item?._metadata?.optimistic) {
     if (!ops.publish.disabled) {
       ops.publish.execute()
@@ -57,9 +57,33 @@ export function DocumentCard(props: DocumentCardProps) {
     }
   }
 
+  const isDarkMode = useTheme().sanity.color.dark
+  const defaultCardTone = isDarkMode ? `transparent` : `default`
+  const validation = useValidationStatus(documentId ?? ``, item._type)
+  const cardTone = useMemo(() => {
+    let tone: CardTone = defaultCardTone
+
+    if (!documentId) return tone
+    if (isDragging) tone = `positive`
+
+    if (validation.validation.length > 0) {
+      if (validation.validation.some((v) => v.level === 'error')) {
+        tone = `critical`
+        toggleInvalidDocumentId(documentId, 'ADD')
+      } else {
+        tone = `caution`
+        toggleInvalidDocumentId(documentId, 'REMOVE')
+      }
+    } else {
+      toggleInvalidDocumentId(documentId, 'REMOVE')
+    }
+
+    return tone
+  }, [defaultCardTone, documentId, isDragging, toggleInvalidDocumentId, validation.validation])
+
   return (
     <Box paddingY={2} paddingX={3}>
-      <Card radius={2} shadow={isDragging ? 3 : 1} tone={isDragging ? 'positive' : defaultCardTone}>
+      <Card radius={2} shadow={isDragging ? 3 : 1} tone={cardTone}>
         <Stack>
           <Card
             borderBottom
@@ -76,20 +100,22 @@ export function DocumentCard(props: DocumentCardProps) {
                 schemaType={schema.get(item._type) as SchemaType}
               />
 
-              <Flex gap={3} style={{flexShrink: 0}} align="center">
-                <DraftStatus document={item} />
-                <PublishedStatus document={item} />
-
-                <DragHandleIcon />
-              </Flex>
+              <Box style={{flexShrink: 0}}>
+                {isDragDisabled && !validation.isValidating ? null : <DragHandleIcon />}
+              </Box>
             </Flex>
           </Card>
 
           <Card padding={2} radius={2} tone="inherit">
-            <Flex align="center" justify="space-between" gap={1}>
-              {documentId && (
-                <UserAssignment userList={userList} assignees={assignees} documentId={documentId} />
-              )}
+            <Flex align="center" justify="space-between" gap={3}>
+              <Box flex={1}>
+                {documentId && (
+                  <UserDisplay userList={userList} assignees={assignees} documentId={documentId} />
+                )}
+              </Box>
+
+              <DraftStatus document={item} />
+              <PublishedStatus document={item} />
               <EditButton id={item._id} type={item._type} />
             </Flex>
           </Card>

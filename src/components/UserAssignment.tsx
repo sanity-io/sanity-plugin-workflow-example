@@ -1,10 +1,8 @@
 import React from 'react'
-import {Button, Popover, useToast, useClickOutside} from '@sanity/ui'
-import {AddIcon} from '@sanity/icons'
+import {useToast} from '@sanity/ui'
 import {UserSelectMenu} from 'sanity-plugin-utils'
 import {useClient} from 'sanity'
 
-import AvatarGroup from './DocumentCard/AvatarGroup'
 import {User} from '../types'
 import {API_VERSION} from '../constants'
 
@@ -12,21 +10,13 @@ type UserAssignmentProps = {
   userList: User[]
   assignees: string[]
   documentId: string
+  isOpen: boolean
 }
 
 export default function UserAssignment(props: UserAssignmentProps) {
-  const {assignees, userList, documentId} = props
+  const {assignees, userList, documentId, isOpen} = props
   const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
-
-  const [button] = React.useState(null)
-  const [popover, setPopover] = React.useState(null)
-  const [isOpen, setIsOpen] = React.useState(false)
-
-  const close = React.useCallback(() => setIsOpen(false), [])
-  const open = React.useCallback(() => setIsOpen(true), [])
-
-  useClickOutside(close, [button, popover])
 
   const addAssignee = React.useCallback(
     (userId: string) => {
@@ -100,39 +90,14 @@ export default function UserAssignment(props: UserAssignmentProps) {
   }, [client, toast, documentId])
 
   return (
-    <Popover
-      // @ts-ignore
-      ref={setPopover}
-      content={
-        <UserSelectMenu
-          style={{maxHeight: 300}}
-          value={assignees || []}
-          userList={userList}
-          onAdd={addAssignee}
-          onClear={clearAssignees}
-          onRemove={removeAssignee}
-          open={isOpen}
-        />
-      }
-      portal
+    <UserSelectMenu
+      style={{maxHeight: 300}}
+      value={assignees || []}
+      userList={userList}
+      onAdd={addAssignee}
+      onClear={clearAssignees}
+      onRemove={removeAssignee}
       open={isOpen}
-    >
-      {!assignees || assignees.length === 0 ? (
-        <Button
-          onClick={open}
-          fontSize={1}
-          padding={2}
-          tabIndex={-1}
-          icon={AddIcon}
-          text="Assign"
-          tone="positive"
-          mode="ghost"
-        />
-      ) : (
-        <Button onClick={open} padding={0} mode="bleed" style={{width: `100%`}}>
-          <AvatarGroup users={userList.filter((u) => assignees.includes(u.id))} />
-        </Button>
-      )}
-    </Popover>
+    />
   )
 }

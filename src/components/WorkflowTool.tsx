@@ -18,24 +18,28 @@ function filterItemsByStateAndUserAndSort(
   selectedUsers: string[],
   selectedSchemaTypes: string[]
 ) {
-  return items
-    .filter((item) => item?._metadata?.state === stateId)
-    .filter((item) =>
-      selectedUsers.length && item._metadata?.assignees.length
-        ? item._metadata?.assignees.some((assignee) => selectedUsers.includes(assignee))
-        : !selectedUsers.length
-    )
-    .filter((item) =>
-      selectedSchemaTypes.length
-        ? selectedSchemaTypes.includes(item._type)
-        : Boolean(selectedSchemaTypes.length)
-    )
-    .sort((a, b) => {
-      const aOrder = a?._metadata?.order ?? 0
-      const bOrder = b?._metadata?.order ?? 0
+  return (
+    items
+      // Only items of this state
+      .filter((item) => item?._metadata?.state === stateId)
+      // Only items with selected users, if the document has any assigned users
+      .filter((item) =>
+        selectedUsers.length && item._metadata?.assignees.length
+          ? item._metadata?.assignees.some((assignee) => selectedUsers.includes(assignee))
+          : !selectedUsers.length
+      )
+      // Only items of selected schema types, if any are selected
+      .filter((item) =>
+        selectedSchemaTypes.length ? selectedSchemaTypes.includes(item._type) : true
+      )
+      // Sort by metadata order
+      .sort((a, b) => {
+        const aOrder = a?._metadata?.order ?? 0
+        const bOrder = b?._metadata?.order ?? 0
 
-      return aOrder - bOrder
-    })
+        return aOrder - bOrder
+      })
+  )
 }
 
 type WorkflowToolProps = {
@@ -75,6 +79,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       const destinationStateItems = [
         ...filterItemsByStateAndUserAndSort(data, destination.droppableId, [], []),
       ]
+
+      // TODO: This ordering logic is naive, and could be improved
       let newOrder = ORDER_MIN
 
       if (!destinationStateItems.length) {
@@ -83,11 +89,15 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       } else if (destination.index === 0) {
         // Now first item in order
         const firstItem = [...destinationStateItems].shift()
-        newOrder = firstItem?._metadata?.order ? firstItem?._metadata?.order - 1000 : ORDER_MIN
+        newOrder = firstItem?._metadata?.order
+          ? firstItem?._metadata?.order - ORDER_MIN / 2
+          : ORDER_MIN
       } else if (destination.index === destinationStateItems.length) {
         // Now last item in order
         const lastItem = [...destinationStateItems].pop()
-        newOrder = lastItem?._metadata?.order ? lastItem?._metadata?.order + 1000 : ORDER_MAX
+        newOrder = lastItem?._metadata?.order
+          ? lastItem?._metadata?.order + ORDER_MAX / 2
+          : ORDER_MAX
       } else {
         // Must be between two items
         const itemBefore = destinationStateItems[destination.index - 1]
@@ -124,6 +134,13 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   const toggleSelectedSchemaType = React.useCallback((schemaType: string) => {
     setSelectedSchemaTypes((prev) =>
       prev.includes(schemaType) ? prev.filter((u) => u !== schemaType) : [...prev, schemaType]
+    )
+  }, [])
+
+  const [invalidDocumentIds, setInvalidDocumentIds] = React.useState<string[]>([])
+  const toggleInvalidDocumentId = React.useCallback((docId: string, action: 'ADD' | 'REMOVE') => {
+    setInvalidDocumentIds((prev) =>
+      action === 'ADD' ? [...prev, docId] : prev.filter((id) => id !== docId)
     )
   }, [])
 
@@ -198,8 +215,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       <DragDropContext onDragEnd={handleDragEnd}>
         <Grid columns={states.length} height="fill">
           {states.map((state: State, stateIndex: number) => (
-            <Card key={state.id} borderLeft={stateIndex > 0}>
-              <Card paddingY={4} padding={3} style={{pointerEvents: `none`}}>
+            <Card key={state.id} borderLeft={stateIndex > 0} tone={defaultCardTone}>
+              <Card paddingY={3} padding={3} style={{pointerEvents: `none`}}>
                 <Label>{state.title}</Label>
               </Card>
               <Droppable droppableId={state.id}>
@@ -227,6 +244,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                           key={item?._metadata?.documentId as string}
                           draggableId={item?._metadata?.documentId as string}
                           index={itemIndex}
+                          isDragDisabled={invalidDocumentIds.includes(
+                            item?._metadata?.documentId as string
+                          )}
                         >
                           {(draggableProvided, draggableSnapshot) => (
                             <div
@@ -235,10 +255,14 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                               {...draggableProvided.dragHandleProps}
                             >
                               <DocumentCard
+                                isDragDisabled={invalidDocumentIds.includes(
+                                  item?._metadata?.documentId as string
+                                )}
                                 isDragging={draggableSnapshot.isDragging}
                                 item={item}
-                                userList={userList}
                                 states={states}
+                                toggleInvalidDocumentId={toggleInvalidDocumentId}
+                                userList={userList}
                               />
                             </div>
                           )}
