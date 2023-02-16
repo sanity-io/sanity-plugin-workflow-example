@@ -56,17 +56,19 @@ Documents can be promoted and demoted in the workflow with the provided Document
 ```ts
 {
     // Required configuration
-    id: 'live',
-    title: 'Live',
+    id: 'inReview',
+    title: 'In Review',
     // Optional settings:
-    // Will un/publish the document when moved to this state
+    // Will un/publish the Document when moved to this State
     operation: 'publish', // or 'unpublish'
-    // Used for the color of the document badge
+    // Used for the color of the Document Badge
     color: 'success',
-    // Will disable document actions and drag-and-drop for any other users
-    roles: ['editor', 'administrator'],
-    // Requires the user to be "assigned" in order to update to this state
+    // Will enable document actions and drag-and-drop for only users with these Role
+    roles: ['publisher', 'administrator'],
+    // Requires the user to be "assigned" in order to update to this State
     requireAssignment: true,
+    // Defines which States a document can be moved to from this one
+    transitions: ['changesRequested', 'approved']
 }
 ```
 
