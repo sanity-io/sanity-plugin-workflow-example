@@ -39,7 +39,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   const {move} = operations
 
   const [undroppableStates, setUndroppableStates] = React.useState<string[]>([])
-  const [dragStarted, setDragStarted] = React.useState(false)
+  const [draggingFrom, setDraggingFrom] = React.useState(``)
 
   // When drag starts, check for any States we should not allow dropping on
   // Because of either:
@@ -47,9 +47,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   // 2. The "source" State State has a list of transitions and the "destination" State is not in that list
   const handleDragStart = React.useCallback(
     (start: DragStart) => {
-      setDragStarted(true)
       const {draggableId, source} = start
       const {droppableId: currentStateId} = source
+      setDraggingFrom(currentStateId)
 
       const document = data.find((item) => item._metadata?.documentId === draggableId)
       const state = states.find((s) => s.id === currentStateId)
@@ -80,8 +80,11 @@ export default function WorkflowTool(props: WorkflowToolProps) {
         undroppableStateIds.push(...statesThatCannotBeTransitionedToIds)
       }
 
-      if (undroppableStateIds.length) {
-        setUndroppableStates(undroppableStateIds)
+      // Remove currentStateId from undroppableStates
+      const undroppableExceptSelf = undroppableStateIds.filter((id) => id !== currentStateId)
+
+      if (undroppableExceptSelf.length) {
+        setUndroppableStates(undroppableExceptSelf)
       }
     },
     [data, states, user]
@@ -91,7 +94,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     (result: DropResult) => {
       // Reset undroppable states
       setUndroppableStates([])
-      setDragStarted(false)
+      setDraggingFrom(``)
 
       const {draggableId, source, destination} = result
 
@@ -186,16 +189,16 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     )
   }
 
-  if (error) {
+  if (error && !data.length) {
     return (
       <Container width={1} padding={5}>
-        <Feedback tone="critical" title="Error with query" />
+        <Feedback tone="critical" title="Error querying for Workflow documents" />
       </Container>
     )
   }
 
   return (
-    <>
+    <Card height="fill" overflow="hidden">
       <Validators data={data} userList={userList} states={states} />
       <Filters
         uniqueAssignedUsers={uniqueAssignedUsers}
@@ -213,25 +216,30 @@ export default function WorkflowTool(props: WorkflowToolProps) {
               ? arraysContainMatchingString(state.roles, userRoleNames)
               : true
             const isDropDisabled = !userRoleCanDrop || undroppableStates.includes(state.id)
-            // const transitionCanDrop = state?.transitions?.length ?
 
             return (
-              <Card key={state.id} borderLeft={stateIndex > 0} tone={defaultCardTone}>
+              <Card
+                key={state.id}
+                borderLeft={stateIndex > 0}
+                tone={defaultCardTone}
+                height="fill"
+                overflow="auto"
+              >
                 <StateTitle
-                  title={state.title}
+                  state={state}
                   requireAssignment={state.requireAssignment ?? false}
                   userRoleCanDrop={userRoleCanDrop}
                   operation={state.operation}
                   isDropDisabled={isDropDisabled}
-                  dragStarted={dragStarted}
+                  draggingFrom={draggingFrom}
                 />
                 <Droppable droppableId={state.id} isDropDisabled={isDropDisabled}>
                   {(provided, snapshot) => (
                     <Card
-                      // __unstable_checkered={!userRoleCanDrop}
                       ref={provided.innerRef}
                       tone={snapshot.isDraggingOver ? `primary` : defaultCardTone}
                       height="fill"
+                      paddingTop={1}
                     >
                       {loading ? (
                         <Flex padding={5} align="center" justify="center">
@@ -269,6 +277,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                                     {...draggableProvided.draggableProps}
                                     {...draggableProvided.dragHandleProps}
                                   >
+                                    {/* <Card border padding={2} margin={2}>
+                                      {item?._metadata?.documentId}
+                                    </Card> */}
                                     <DocumentCard
                                       userRoleCanDrop={userRoleCanDrop}
                                       isDragDisabled={isDragDisabled}
@@ -293,6 +304,6 @@ export default function WorkflowTool(props: WorkflowToolProps) {
           })}
         </Grid>
       </DragDropContext>
-    </>
+    </Card>
   )
 }

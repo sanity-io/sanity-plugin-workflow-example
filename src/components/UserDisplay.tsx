@@ -29,14 +29,7 @@ export default function UserDisplay(props: UserDisplayProps) {
     <Popover
       // @ts-ignore
       ref={setPopover}
-      content={
-        <UserAssignment
-          userList={userList}
-          assignees={assignees}
-          documentId={documentId}
-          // isOpen={isOpen}
-        />
-      }
+      content={<UserAssignment userList={userList} assignees={assignees} documentId={documentId} />}
       portal
       open={isOpen}
     >

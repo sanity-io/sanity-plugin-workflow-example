@@ -15,7 +15,7 @@ type FiltersProps = {
 
 export default function Filters(props: FiltersProps) {
   const {
-    uniqueAssignedUsers,
+    uniqueAssignedUsers = [],
     selectedUsers,
     schemaTypes,
     selectedSchemaTypes,
@@ -23,43 +23,46 @@ export default function Filters(props: FiltersProps) {
     resetSelectedUsers,
     toggleSelectedSchemaType,
   } = props
-  const me = useCurrentUser()
+  const currentUser = useCurrentUser()
 
   const schema = useSchema()
+
+  if (uniqueAssignedUsers.length === 0 && schemaTypes.length < 2) {
+    return null
+  }
 
   return (
     <Card tone="primary" padding={2} borderBottom style={{overflowX: 'hidden'}}>
       <Flex align="center">
         <Flex align="center" gap={1} flex={1}>
-          {me?.id ? (
+          {currentUser?.id && uniqueAssignedUsers.find((u) => u.id === currentUser.id) ? (
             <>
               <Button
                 padding={0}
-                mode={selectedUsers.includes(me.id) ? `default` : `bleed`}
-                onClick={() => toggleSelectedUser(me.id)}
+                mode={selectedUsers.includes(currentUser.id) ? `default` : `bleed`}
+                onClick={() => toggleSelectedUser(currentUser.id)}
               >
                 <Flex padding={1} align="center" justify="center">
-                  <UserAvatar user={me.id} size={1} withTooltip />
+                  <UserAvatar user={currentUser.id} size={1} withTooltip />
                 </Flex>
               </Button>
               <Card borderRight style={{height: 30}} tone="inherit" />
             </>
           ) : null}
-          {uniqueAssignedUsers.length > 0 &&
-            uniqueAssignedUsers
-              .filter((user) => (me?.id ? user.id !== me.id : true))
-              .map((user) => (
-                <Button
-                  key={user.id}
-                  padding={0}
-                  mode={selectedUsers.includes(user.id) ? `default` : `bleed`}
-                  onClick={() => toggleSelectedUser(user.id)}
-                >
-                  <Flex padding={1} align="center" justify="center">
-                    <UserAvatar user={user} size={1} withTooltip />
-                  </Flex>
-                </Button>
-              ))}
+          {uniqueAssignedUsers
+            .filter((u) => (currentUser?.id ? u.id !== currentUser.id : true))
+            .map((user) => (
+              <Button
+                key={user.id}
+                padding={0}
+                mode={selectedUsers.includes(user.id) ? `default` : `bleed`}
+                onClick={() => toggleSelectedUser(user.id)}
+              >
+                <Flex padding={1} align="center" justify="center">
+                  <UserAvatar user={user} size={1} withTooltip />
+                </Flex>
+              </Button>
+            ))}
 
           {selectedUsers.length > 0 ? (
             <Button text="Clear" onClick={resetSelectedUsers} mode="ghost" icon={ResetIcon} />

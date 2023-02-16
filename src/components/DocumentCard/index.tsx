@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import {useMemo} from 'react'
+import {useEffect, useMemo} from 'react'
 import {Box, Card, CardTone, Flex, Stack, useTheme, useToast} from '@sanity/ui'
 import {DragHandleIcon} from '@sanity/icons'
 import {useSchema, SchemaType, useDocumentOperation, useValidationStatus} from 'sanity'
@@ -36,40 +36,47 @@ export function DocumentCard(props: DocumentCardProps) {
   const schema = useSchema()
   const currentState = useMemo(
     () => states.find((state) => state.id === item._metadata?.state),
-    [states, item._metadata?.state]
+    [states, item]
   )
 
   // Perform operation
   // If state has changed and the document needs to be un/published
   const ops = useDocumentOperation(documentId ?? ``, item._type)
-  const isDraft = item._id.startsWith('drafts.')
-
   const toast = useToast()
 
   // Perform document operations after state changes
-  if (isDraft && currentState?.operation === 'publish' && !item?._metadata?.optimistic) {
-    if (!ops.publish.disabled) {
-      ops.publish.execute()
-      toast.push({
-        title: 'Published Document',
-        description: documentId,
-        status: 'success',
-      })
+  useEffect(() => {
+    const isDraft = item._id.startsWith('drafts.')
+
+    if (isDraft && currentState?.operation === 'publish' && !item?._metadata?.optimistic) {
+      if (!ops.publish.disabled) {
+        ops.publish.execute()
+        toast.push({
+          title: 'Published Document',
+          description: documentId,
+          status: 'success',
+        })
+      }
+    } else if (
+      !isDraft &&
+      currentState?.operation === 'unpublish' &&
+      !item?._metadata?.optimistic
+    ) {
+      if (!ops.unpublish.disabled) {
+        ops.unpublish.execute()
+        toast.push({
+          title: 'Unpublished Document',
+          description: documentId,
+          status: 'success',
+        })
+      }
     }
-  } else if (!isDraft && currentState?.operation === 'unpublish' && !item?._metadata?.optimistic) {
-    if (!ops.unpublish.disabled) {
-      ops.unpublish.execute()
-      toast.push({
-        title: 'Unpublished Document',
-        description: documentId,
-        status: 'success',
-      })
-    }
-  }
+  }, [currentState, documentId, item, ops, toast])
 
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? `transparent` : `default`
   const validation = useValidationStatus(documentId ?? ``, item._type)
+
   const cardTone = useMemo(() => {
     let tone: CardTone = defaultCardTone
 
@@ -97,12 +104,14 @@ export function DocumentCard(props: DocumentCardProps) {
     documentId,
     isDragging,
     toggleInvalidDocumentId,
-    validation.validation,
+    validation,
   ])
 
-  const hasError = validation.isValidating
-    ? false
-    : validation.validation.some((v) => v.level === 'error')
+  const hasError = useMemo(
+    () =>
+      validation.isValidating ? false : validation.validation.some((v) => v.level === 'error'),
+    [validation]
+  )
 
   return (
     <Box paddingBottom={3} paddingX={3}>
@@ -141,8 +150,9 @@ export function DocumentCard(props: DocumentCardProps) {
                   />
                 )}
               </Box>
-              <ValidationStatus validation={validation.validation} />
-
+              {validation.validation.length > 0 ? (
+                <ValidationStatus validation={validation.validation} />
+              ) : null}
               <DraftStatus document={item} />
               <PublishedStatus document={item} />
               <EditButton id={item._id} type={item._type} disabled={!userRoleCanDrop} />

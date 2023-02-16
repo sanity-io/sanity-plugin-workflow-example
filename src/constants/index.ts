@@ -8,13 +8,13 @@ export const ORDER_MIN = 10000
 export const DEFAULT_CONFIG: WorkflowConfig = {
   schemaTypes: [],
   states: defineStates([
-    {
-      id: 'staged',
-      title: 'Staged',
-      operation: 'unpublish',
-      roles: ['editor', 'administrator'],
-      transitions: ['inReview'],
-    },
+    // {
+    //   id: 'staged',
+    //   title: 'Staged',
+    //   operation: 'unpublish',
+    //   roles: ['editor', 'administrator'],
+    //   transitions: ['inReview'],
+    // },
     {
       id: 'inReview',
       title: 'In review',
@@ -34,16 +34,16 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
       title: 'Approved',
       color: 'success',
       roles: ['administrator'],
-      transitions: ['changesRequested', 'released'],
-    },
-    {
-      id: 'released',
-      title: 'Released',
-      operation: 'publish',
-      color: 'success',
-      roles: ['administrator'],
-      requireAssignment: true,
       transitions: ['changesRequested'],
     },
+    // {
+    //   id: 'released',
+    //   title: 'Released',
+    //   operation: 'publish',
+    //   color: 'success',
+    //   roles: ['administrator'],
+    //   requireAssignment: true,
+    //   transitions: ['changesRequested'],
+    // },
   ]),
 }

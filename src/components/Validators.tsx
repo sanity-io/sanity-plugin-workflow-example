@@ -4,7 +4,7 @@ import {useClient} from 'sanity'
 import {UserExtended} from 'sanity-plugin-utils'
 
 import FloatingCard from './FloatingCard'
-import {API_VERSION, ORDER_MIN} from '../constants'
+import {API_VERSION, ORDER_MAX, ORDER_MIN} from '../constants'
 import {SanityDocumentWithMetadata, State} from '../types'
 
 type ValidatorsProps = {
@@ -30,12 +30,14 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
       }, [] as string[])
     : []
 
-  const documentsWithoutValidUsersIds = data?.length
+  const documentsWithInvalidUserIds = data?.length
     ? data.reduce((acc, cur) => {
         const {documentId, assignees} = cur._metadata ?? {}
-        const assigneesExist = assignees?.every((a) => userList.find((u) => u.id === a))
+        const allAssigneesExist = assignees?.length
+          ? assignees?.every((a) => userList.find((u) => u.id === a))
+          : true
 
-        return !assigneesExist && documentId ? [...acc, documentId] : acc
+        return !allAssigneesExist && documentId ? [...acc, documentId] : acc
       }, [] as string[])
     : []
 
@@ -55,12 +57,23 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
         status: 'info',
       })
 
-      const tx = ids.reduce((item, documentId) => {
+      // TODO: This is naive, should be smarter
+      const highestOrder =
+        [...data]
+          ?.sort((a, b) =>
+            b?._metadata?.order && a?._metadata?.order
+              ? b?._metadata?.order - a?._metadata?.order
+              : 0
+          )
+          ?.pop()?._metadata?.order ?? ORDER_MAX
+
+      const tx = ids.reduce((item, documentId, txIndex) => {
         return item.createOrReplace({
           _id: `workflow-metadata.${documentId}`,
           _type: 'workflow.metadata',
           state: states[0].id,
           documentId,
+          order: highestOrder + txIndex * 500,
         })
       }, client.transaction())
 
@@ -71,7 +84,7 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
         status: 'success',
       })
     },
-    [client, states, toast]
+    [client, states, toast, data]
   )
 
   // Updates metadata documents to a valid, existing state
@@ -178,14 +191,14 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
           }
         />
       ) : null}
-      {documentsWithoutValidUsersIds.length > 0 ? (
+      {documentsWithInvalidUserIds.length > 0 ? (
         <Button
           tone="caution"
-          onClick={() => removeUsersFromDocuments(documentsWithoutValidUsersIds)}
+          onClick={() => removeUsersFromDocuments(documentsWithInvalidUserIds)}
           text={
-            documentsWithoutValidUsersIds.length === 1
+            documentsWithInvalidUserIds.length === 1
               ? `Remove Invalid Users from 1 Document`
-              : `Remove Invalid Users from ${documentsWithoutValidUsersIds.length} Documents`
+              : `Remove Invalid Users from ${documentsWithInvalidUserIds.length} Documents`
           }
         />
       ) : null}
