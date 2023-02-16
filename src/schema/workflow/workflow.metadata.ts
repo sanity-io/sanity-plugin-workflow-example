@@ -1,4 +1,5 @@
 import {defineType, defineField} from 'sanity'
+
 import Field from '../../components/DocumentCard/Field'
 import UserAssignmentInput from '../../components/UserAssignmentInput'
 import {State} from '../../types'

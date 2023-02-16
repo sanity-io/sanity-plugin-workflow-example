@@ -1,36 +1,30 @@
 import React from 'react'
 import {useListeningQuery} from 'sanity-plugin-utils'
 import {useToast} from '@sanity/ui'
-import {SanityDocumentLike, useClient} from 'sanity'
+import {useClient} from 'sanity'
 import {DraggableLocation} from 'react-beautiful-dnd'
 import groq from 'groq'
 
-import {SanityDocumentWithMetadata, Metadata, State} from '../types'
+import {SanityDocumentWithMetadata, State} from '../types'
 import {API_VERSION} from '../constants'
 
-type DocumentsAndMetadata = {
-  documents: SanityDocumentLike[]
-  metadata: Metadata[]
-}
-
-const DOCUMENT_LIST_QUERY = groq`*[_type in $schemaTypes]{ _id, _type, _rev, _updatedAt }`
-const METADATA_LIST_QUERY = groq`*[_type == "workflow.metadata"]{
-  _rev,
-  assignees,
-  documentId,
-  state,
-  order
+const QUERY = groq`*[_type == "workflow.metadata"]{
+  "_metadata": {
+    _rev,
+    assignees,
+    documentId,
+    state,
+    order
+  },
+  ...(
+    *[_id in [^.documentId, "drafts." + ^.documentId]]|order(_updatedAt)[0]{ 
+      _id, 
+      _type, 
+      _rev, 
+      _updatedAt 
+    }
+  )
 }`
-
-const COMBINED_QUERY = groq`{
-  "documents": ${DOCUMENT_LIST_QUERY},
-  "metadata": ${METADATA_LIST_QUERY}
-}`
-
-const INITIAL_VALUE: DocumentsAndMetadata = {
-  documents: [],
-  metadata: [],
-}
 
 type WorkflowDocuments = {
   workflowData: {
@@ -51,46 +45,18 @@ type WorkflowDocuments = {
 export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
   const toast = useToast()
   const client = useClient({apiVersion: API_VERSION})
-  const [localDocuments, setLocalDocuments] = React.useState<SanityDocumentWithMetadata[]>([])
 
   // Get and listen to changes on documents + workflow metadata documents
-  const {data, loading, error} = useListeningQuery<DocumentsAndMetadata>(COMBINED_QUERY, {
+  const {data, loading, error} = useListeningQuery<SanityDocumentWithMetadata[]>(QUERY, {
     params: {schemaTypes},
-    initialValue: INITIAL_VALUE,
+    initialValue: [],
   })
 
-  // Store local state for optimistic updates
+  const [localDocuments, setLocalDocuments] = React.useState<SanityDocumentWithMetadata[]>([])
+
   React.useEffect(() => {
     if (data) {
-      // Combine metadata data into document
-      const documentsWithMetadata = data.documents.reduce(
-        (acc: SanityDocumentWithMetadata[], cur) => {
-          // Filter out documents without metadata
-          const curMeta = data.metadata.find((d) => d.documentId === cur._id.replace(`drafts.`, ``))
-
-          // Add _metadata as null so it can be shown as a document that needs to be imported into workflow
-          if (!curMeta) {
-            return [...acc, {_metadata: null, ...cur}]
-          }
-
-          const curWithMetadata = {_metadata: curMeta, ...cur}
-
-          // Remove `published` from array if `draft` exists
-          if (!cur._id.startsWith(`drafts.`)) {
-            // eslint-disable-next-line max-nested-callbacks
-            const alsoHasDraft: boolean = Boolean(
-              data.documents.find((doc) => doc._id === `drafts.${cur._id}`)
-            )
-
-            return alsoHasDraft ? acc : [...acc, curWithMetadata]
-          }
-
-          return [...acc, curWithMetadata]
-        },
-        []
-      )
-
-      setLocalDocuments(documentsWithMetadata)
+      setLocalDocuments(data)
     }
   }, [data])
 
@@ -173,7 +139,7 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
       // Send back to the workflow board so a document update can happen
       return {_id, _type, documentId, state: newState as State}
     },
-    [client, toast, localDocuments]
+    [client, toast, localDocuments, data]
   )
 
   return {

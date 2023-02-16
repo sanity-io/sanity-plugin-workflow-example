@@ -61,6 +61,10 @@ export type Metadata = SanityDocumentLike & {
   order: number
 }
 
-export type SanityDocumentWithMetadata = SanityDocumentLike & {
-  _metadata: Metadata | null
+export type SanityDocumentWithMetadata = {
+  _metadata: Metadata
+  _id: string
+  _type: string
+  _rev: string
+  _updatedAt: string
 }

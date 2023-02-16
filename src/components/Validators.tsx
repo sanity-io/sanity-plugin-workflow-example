@@ -4,7 +4,7 @@ import {useClient} from 'sanity'
 import {UserExtended} from 'sanity-plugin-utils'
 
 import FloatingCard from './FloatingCard'
-import {API_VERSION, ORDER_MAX, ORDER_MIN} from '../constants'
+import {API_VERSION, ORDER_MIN} from '../constants'
 import {SanityDocumentWithMetadata, State} from '../types'
 
 type ValidatorsProps = {
@@ -18,9 +18,6 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
   const toast = useToast()
 
   // A lot of error-checking
-  const documentsWithoutMetadataIds = data?.length
-    ? data.filter((doc) => !doc._metadata).map((d) => d._id.replace(`drafts.`, ``))
-    : []
   const documentsWithoutValidMetadataIds = data?.length
     ? data.reduce((acc, cur) => {
         const {documentId, state} = cur._metadata ?? {}
@@ -48,44 +45,6 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
         return !order && documentId ? [...acc, documentId] : acc
       }, [] as string[])
     : []
-
-  // Creates metadata documents for those that do not have them
-  const importDocuments = React.useCallback(
-    async (ids: string[]) => {
-      toast.push({
-        title: 'Importing documents',
-        status: 'info',
-      })
-
-      // TODO: This is naive, should be smarter
-      const highestOrder =
-        [...data]
-          ?.sort((a, b) =>
-            b?._metadata?.order && a?._metadata?.order
-              ? b?._metadata?.order - a?._metadata?.order
-              : 0
-          )
-          ?.pop()?._metadata?.order ?? ORDER_MAX
-
-      const tx = ids.reduce((item, documentId, txIndex) => {
-        return item.createOrReplace({
-          _id: `workflow-metadata.${documentId}`,
-          _type: 'workflow.metadata',
-          state: states[0].id,
-          documentId,
-          order: highestOrder + txIndex * 500,
-        })
-      }, client.transaction())
-
-      await tx.commit()
-
-      toast.push({
-        title: `Imported ${ids.length === 1 ? `1 Document` : `${ids.length} Documents`}`,
-        status: 'success',
-      })
-    },
-    [client, states, toast, data]
-  )
 
   // Updates metadata documents to a valid, existing state
   const correctDocuments = React.useCallback(
@@ -169,17 +128,6 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
 
   return (
     <FloatingCard>
-      {documentsWithoutMetadataIds.length > 0 ? (
-        <Button
-          tone="caution"
-          onClick={() => importDocuments(documentsWithoutMetadataIds)}
-          text={
-            documentsWithoutMetadataIds.length === 1
-              ? `Import 1 Missing Document into Workflow`
-              : `Import ${documentsWithoutMetadataIds.length} Missing Documents into Workflow`
-          }
-        />
-      ) : null}
       {documentsWithoutValidMetadataIds.length > 0 ? (
         <Button
           tone="caution"

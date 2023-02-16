@@ -76,7 +76,8 @@ This plugin is largely based on the original Workflow Demo built into a Sanity S
 
 * This plugin can be more easily installed and configured, not just code examples built into a Studio project
 * Documents must "opt in" to and be removed from the Workflow, in the previous version all documents were in the workflow which would fill up the interface
-* User Roles and Assignment can affect the Workflow
+* User Roles and Assignment can affect the Workflow. Set rules to enforce which States documents can move between, and if being assigned to a document is required to move it to a new State
+* Ability to filter Schema types and assigned Users
 
 ## License
 

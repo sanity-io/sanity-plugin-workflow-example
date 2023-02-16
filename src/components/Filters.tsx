@@ -5,7 +5,7 @@ import {UserExtended} from 'sanity-plugin-utils'
 
 type FiltersProps = {
   uniqueAssignedUsers: UserExtended[]
-  selectedUsers: string[]
+  selectedUserIds: string[]
   schemaTypes: string[]
   selectedSchemaTypes: string[]
   toggleSelectedUser: (userId: string) => void
@@ -16,7 +16,7 @@ type FiltersProps = {
 export default function Filters(props: FiltersProps) {
   const {
     uniqueAssignedUsers = [],
-    selectedUsers,
+    selectedUserIds,
     schemaTypes,
     selectedSchemaTypes,
     toggleSelectedUser,
@@ -39,7 +39,7 @@ export default function Filters(props: FiltersProps) {
             <>
               <Button
                 padding={0}
-                mode={selectedUsers.includes(currentUser.id) ? `default` : `bleed`}
+                mode={selectedUserIds.includes(currentUser.id) ? `default` : `bleed`}
                 onClick={() => toggleSelectedUser(currentUser.id)}
               >
                 <Flex padding={1} align="center" justify="center">
@@ -55,7 +55,7 @@ export default function Filters(props: FiltersProps) {
               <Button
                 key={user.id}
                 padding={0}
-                mode={selectedUsers.includes(user.id) ? `default` : `bleed`}
+                mode={selectedUserIds.includes(user.id) ? `default` : `bleed`}
                 onClick={() => toggleSelectedUser(user.id)}
               >
                 <Flex padding={1} align="center" justify="center">
@@ -64,7 +64,7 @@ export default function Filters(props: FiltersProps) {
               </Button>
             ))}
 
-          {selectedUsers.length > 0 ? (
+          {selectedUserIds.length > 0 ? (
             <Button text="Clear" onClick={resetSelectedUsers} mode="ghost" icon={ResetIcon} />
           ) : null}
         </Flex>

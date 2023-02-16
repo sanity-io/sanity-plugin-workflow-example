@@ -3,8 +3,8 @@ import {SanityDocumentWithMetadata} from '../types'
 export function filterItemsAndSort(
   items: SanityDocumentWithMetadata[],
   stateId: string,
-  selectedUsers: string[],
-  selectedSchemaTypes: string[]
+  selectedUsers: string[] = [],
+  selectedSchemaTypes: string[] = []
 ): SanityDocumentWithMetadata[] {
   return (
     items
@@ -12,7 +12,7 @@ export function filterItemsAndSort(
       .filter((item) => item?._metadata?.state === stateId)
       // Only items with selected users, if the document has any assigned users
       .filter((item) =>
-        selectedUsers.length && item._metadata?.assignees.length
+        selectedUsers.length && item._metadata?.assignees?.length
           ? item._metadata?.assignees.some((assignee) => selectedUsers.includes(assignee))
           : !selectedUsers.length
       )

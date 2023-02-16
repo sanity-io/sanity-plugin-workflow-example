@@ -21,8 +21,9 @@ export function AssignAction(props: DocumentActionProps, states: State[]) {
   return {
     icon: UsersIcon,
     type: 'dialog',
-    disabled: loading || error,
+    disabled: !data || loading || error,
     label: `Assign`,
+    title: data ? null : `Document is not in Workflow`,
     dialog: isDialogOpen && {
       type: 'popover',
       onClose: () => {

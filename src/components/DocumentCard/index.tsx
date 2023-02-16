@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import {useMemo} from 'react'
-import {Box, Card, CardTone, Flex, Stack, useTheme} from '@sanity/ui'
+import {Box, Card, CardTone, Flex, Stack, Text, useTheme} from '@sanity/ui'
 import {DragHandleIcon} from '@sanity/icons'
 import {useSchema, SchemaType, useValidationStatus} from 'sanity'
 import {Preview} from 'sanity'
@@ -127,12 +127,14 @@ export function DocumentCard(props: DocumentCardProps) {
             style={{pointerEvents: 'none'}}
           >
             <Flex align="center" justify="space-between" gap={1}>
-              <Preview
-                layout="default"
-                value={item}
-                schemaType={schema.get(item._type) as SchemaType}
-              />
-
+              <Box flex={1}>
+                <Preview
+                  layout="default"
+                  value={item}
+                  schemaType={schema.get(item._type) as SchemaType}
+                />
+              </Box>
+              <Text>{item._metadata.order}</Text>
               <Box style={{flexShrink: 0}}>
                 {hasError || isDragDisabled ? null : <DragHandleIcon />}
               </Box>

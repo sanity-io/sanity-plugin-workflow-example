@@ -153,14 +153,16 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     return userList.filter((u) => uniqueUserIds.includes(u.id))
   }, [data, userList])
 
-  const [selectedUsers, setSelectedUsers] = React.useState<any[]>(uniqueAssignedUsers)
+  const [selectedUserIds, setSelectedUserIds] = React.useState<string[]>(
+    uniqueAssignedUsers.map((u) => u.id)
+  )
   const toggleSelectedUser = React.useCallback((userId: string) => {
-    setSelectedUsers((prev) =>
+    setSelectedUserIds((prev) =>
       prev.includes(userId) ? prev.filter((u) => u !== userId) : [...prev, userId]
     )
   }, [])
   const resetSelectedUsers = React.useCallback(() => {
-    setSelectedUsers([])
+    setSelectedUserIds([])
   }, [])
 
   const [selectedSchemaTypes, setSelectedSchemaTypes] = React.useState<string[]>(schemaTypes)
@@ -202,7 +204,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       <Validators data={data} userList={userList} states={states} />
       <Filters
         uniqueAssignedUsers={uniqueAssignedUsers}
-        selectedUsers={selectedUsers}
+        selectedUserIds={selectedUserIds}
         toggleSelectedUser={toggleSelectedUser}
         resetSelectedUsers={resetSelectedUsers}
         schemaTypes={schemaTypes}
@@ -248,50 +250,53 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                       ) : null}
 
                       {data.length > 0 &&
-                        filterItemsAndSort(data, state.id, selectedUsers, selectedSchemaTypes).map(
-                          (item, itemIndex) => {
-                            const isInvalid = invalidDocumentIds.includes(
-                              String(item?._metadata?.documentId)
-                            )
-                            const meInAssignees = user?.id
-                              ? item?._metadata?.assignees?.includes(user.id)
-                              : false
-                            const isDragDisabled =
-                              !userRoleCanDrop ||
-                              isInvalid ||
-                              !(state.requireAssignment
-                                ? state.requireAssignment && meInAssignees
-                                : true)
+                        filterItemsAndSort(
+                          data,
+                          state.id,
+                          selectedUserIds,
+                          selectedSchemaTypes
+                        ).map((item, itemIndex) => {
+                          const isInvalid = invalidDocumentIds.includes(
+                            String(item?._metadata?.documentId)
+                          )
+                          const meInAssignees = user?.id
+                            ? item?._metadata?.assignees?.includes(user.id)
+                            : false
+                          const isDragDisabled =
+                            !userRoleCanDrop ||
+                            isInvalid ||
+                            !(state.requireAssignment
+                              ? state.requireAssignment && meInAssignees
+                              : true)
 
-                            return (
-                              <Draggable
-                                // The metadata's documentId is always the published one to avoid rerendering
-                                key={String(item?._metadata?.documentId)}
-                                draggableId={String(item?._metadata?.documentId)}
-                                index={itemIndex}
-                                isDragDisabled={isDragDisabled}
-                              >
-                                {(draggableProvided, draggableSnapshot) => (
-                                  <div
-                                    ref={draggableProvided.innerRef}
-                                    {...draggableProvided.draggableProps}
-                                    {...draggableProvided.dragHandleProps}
-                                  >
-                                    <DocumentCard
-                                      userRoleCanDrop={userRoleCanDrop}
-                                      isDragDisabled={isDragDisabled}
-                                      isDragging={draggableSnapshot.isDragging}
-                                      item={item}
-                                      toggleInvalidDocumentId={toggleInvalidDocumentId}
-                                      userList={userList}
-                                      // states={states}
-                                    />
-                                  </div>
-                                )}
-                              </Draggable>
-                            )
-                          }
-                        )}
+                          return (
+                            <Draggable
+                              // The metadata's documentId is always the published one to avoid rerendering
+                              key={String(item?._metadata?.documentId)}
+                              draggableId={String(item?._metadata?.documentId)}
+                              index={itemIndex}
+                              isDragDisabled={isDragDisabled}
+                            >
+                              {(draggableProvided, draggableSnapshot) => (
+                                <div
+                                  ref={draggableProvided.innerRef}
+                                  {...draggableProvided.draggableProps}
+                                  {...draggableProvided.dragHandleProps}
+                                >
+                                  <DocumentCard
+                                    userRoleCanDrop={userRoleCanDrop}
+                                    isDragDisabled={isDragDisabled}
+                                    isDragging={draggableSnapshot.isDragging}
+                                    item={item}
+                                    toggleInvalidDocumentId={toggleInvalidDocumentId}
+                                    userList={userList}
+                                    // states={states}
+                                  />
+                                </div>
+                              )}
+                            </Draggable>
+                          )
+                        })}
                       {provided.placeholder}
                     </Card>
                   )}

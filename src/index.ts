@@ -1,13 +1,12 @@
 import {definePlugin} from 'sanity'
 
-// import StateTimeline, {StateTimelineProps} from './components/StateTimeline'
 import {DEFAULT_CONFIG} from './constants'
-import {UpdateStateAction} from './actions/UpdateStateAction'
 import {StateBadge} from './badges'
 import {WorkflowConfig} from './types'
 import {workflowTool} from './tools'
 import metadata from './schema/workflow/workflow.metadata'
 import {AssignAction} from './actions/AssignAction'
+import {BeginWorkflow} from './actions/BeginWorkflow'
 
 export const workflow = definePlugin<WorkflowConfig>((config = DEFAULT_CONFIG) => {
   const {schemaTypes, states} = {...DEFAULT_CONFIG, ...config}
@@ -43,9 +42,10 @@ export const workflow = definePlugin<WorkflowConfig>((config = DEFAULT_CONFIG) =
         }
 
         return [
-          (props) => UpdateStateAction(props, states, 'promote'),
+          // (props) => UpdateStateAction(props, states, 'promote'),
+          (props) => BeginWorkflow(props, states),
           (props) => AssignAction(props, states),
-          (props) => UpdateStateAction(props, states, 'demote'),
+          // (props) => UpdateStateAction(props, states, 'demote'),
           ...prev,
         ]
       },
