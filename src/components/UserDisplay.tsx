@@ -34,7 +34,7 @@ export default function UserDisplay(props: UserDisplayProps) {
           userList={userList}
           assignees={assignees}
           documentId={documentId}
-          isOpen={isOpen}
+          // isOpen={isOpen}
         />
       }
       portal

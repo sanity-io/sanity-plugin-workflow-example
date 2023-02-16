@@ -4,17 +4,30 @@ export type Operation = 'publish' | 'unpublish'
 
 export type State = {
   id: string
+  transitions: string[]
   title: string
   operation?: Operation
   roles?: string[]
   requireAssignment?: boolean
-  // From badge props
+  // From document badges
   color?: 'primary' | 'success' | 'warning' | 'danger'
 }
+
+export type StateCheck<Id, States> = {
+  id: Id
+  // Transitions is an array of State ids
+  transitions?: States extends {id: infer Id2}[] ? Id2[] : never
+} & State
 
 export type WorkflowConfig = {
   schemaTypes: string[]
   states?: State[]
+}
+
+export function defineStates<Id extends string, States extends StateCheck<Id, States>[]>(
+  states: States
+): States {
+  return states
 }
 
 export type User = {

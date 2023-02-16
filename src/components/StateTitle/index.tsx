@@ -1,4 +1,4 @@
-import {Flex, Card, Label} from '@sanity/ui'
+import {Flex, Card, Badge, BadgeTone} from '@sanity/ui'
 import {InfoOutlineIcon, UserIcon, PublishIcon, UnpublishIcon} from '@sanity/icons'
 
 import {Status} from './Status'
@@ -8,16 +8,30 @@ type StateTitleProps = {
   title: string
   requireAssignment: boolean
   userRoleCanDrop: boolean
+  isDropDisabled: boolean
+  dragStarted: boolean
   operation?: Operation
 }
 
 export default function StateTitle(props: StateTitleProps) {
-  const {title, requireAssignment, userRoleCanDrop, operation} = props
+  const {title, requireAssignment, userRoleCanDrop, isDropDisabled, dragStarted, operation} = props
+
+  let tone: BadgeTone = 'default'
+
+  if (dragStarted) {
+    tone = isDropDisabled ? 'default' : 'positive'
+  }
 
   return (
-    <Card padding={3} paddingTop={4} tone="inherit">
-      <Flex gap={3}>
-        <Label muted={!userRoleCanDrop}>{title}</Label>
+    <Card paddingY={4} padding={3} tone="inherit">
+      <Flex gap={3} align="center">
+        <Badge
+          mode={dragStarted && !isDropDisabled ? 'default' : 'outline'}
+          tone={tone}
+          muted={!userRoleCanDrop || isDropDisabled}
+        >
+          {title}
+        </Badge>
         {userRoleCanDrop ? null : (
           <Status
             text="You do not have permissions to move documents to this State"

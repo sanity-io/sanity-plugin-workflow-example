@@ -33,7 +33,6 @@ export function AssignAction(props: DocumentActionProps, states: State[]) {
           userList={userList}
           assignees={data.metadata?.assignees ?? []}
           documentId={id}
-          isOpen={isDialogOpen}
         />
       ),
     },

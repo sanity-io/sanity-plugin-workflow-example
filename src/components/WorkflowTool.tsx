@@ -2,14 +2,7 @@ import React from 'react'
 import {Flex, Card, Grid, Spinner, Container, useTheme} from '@sanity/ui'
 import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
 import {Tool, useCurrentUser} from 'sanity'
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-  DragStart,
-  ResponderProvided,
-} from 'react-beautiful-dnd'
+import {DragDropContext, Droppable, Draggable, DropResult, DragStart} from 'react-beautiful-dnd'
 
 import {State, WorkflowConfig} from '../types'
 import {DocumentCard} from './DocumentCard'
@@ -46,28 +39,49 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   const {move} = operations
 
   const [undroppableStates, setUndroppableStates] = React.useState<string[]>([])
+  const [dragStarted, setDragStarted] = React.useState(false)
 
-  // When drag starts, check for any states that require user assignment
-  // If so, block them if the currently dragged document is not assigned to the user
+  // When drag starts, check for any States we should not allow dropping on
+  // Because of either:
+  // 1. The "destination" State requires user assignment and the user is not assigned to the dragged document
+  // 2. The "source" State State has a list of transitions and the "destination" State is not in that list
   const handleDragStart = React.useCallback(
-    (start: DragStart, provided: ResponderProvided) => {
-      const {draggableId} = start
+    (start: DragStart) => {
+      setDragStarted(true)
+      const {draggableId, source} = start
+      const {droppableId: currentStateId} = source
 
       const document = data.find((item) => item._metadata?.documentId === draggableId)
+      const state = states.find((s) => s.id === currentStateId)
 
-      if (!document) return
+      // This shouldn't happen but TypeScript
+      if (!document || !state) return
 
+      const undroppableStateIds = []
       const statesThatRequireAssignmentIds = states
-        .filter((state) => state.requireAssignment)
-        .map((state) => state.id)
+        .filter((s) => s.requireAssignment)
+        .map((s) => s.id)
 
-      if (!statesThatRequireAssignmentIds.length) return
+      if (statesThatRequireAssignmentIds.length) {
+        const documentAssignees = document._metadata?.assignees ?? []
+        const userIsAssignedToDocument = user?.id ? documentAssignees.includes(user.id) : false
 
-      const documentAssignees = document._metadata?.assignees ?? []
-      const userIsAssignedToDocument = user?.id ? documentAssignees.includes(user.id) : false
+        if (!userIsAssignedToDocument) {
+          undroppableStateIds.push(...statesThatRequireAssignmentIds)
+        }
+      }
 
-      if (!userIsAssignedToDocument) {
-        setUndroppableStates(statesThatRequireAssignmentIds)
+      const statesThatCannotBeTransitionedToIds =
+        state.transitions && state.transitions.length
+          ? states.filter((s) => !state.transitions?.includes(s.id)).map((s) => s.id)
+          : []
+
+      if (statesThatCannotBeTransitionedToIds.length) {
+        undroppableStateIds.push(...statesThatCannotBeTransitionedToIds)
+      }
+
+      if (undroppableStateIds.length) {
+        setUndroppableStates(undroppableStateIds)
       }
     },
     [data, states, user]
@@ -77,6 +91,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     (result: DropResult) => {
       // Reset undroppable states
       setUndroppableStates([])
+      setDragStarted(false)
 
       const {draggableId, source, destination} = result
 
@@ -197,6 +212,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
             const userRoleCanDrop = state?.roles?.length
               ? arraysContainMatchingString(state.roles, userRoleNames)
               : true
+            const isDropDisabled = !userRoleCanDrop || undroppableStates.includes(state.id)
+            // const transitionCanDrop = state?.transitions?.length ?
 
             return (
               <Card key={state.id} borderLeft={stateIndex > 0} tone={defaultCardTone}>
@@ -205,11 +222,10 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                   requireAssignment={state.requireAssignment ?? false}
                   userRoleCanDrop={userRoleCanDrop}
                   operation={state.operation}
+                  isDropDisabled={isDropDisabled}
+                  dragStarted={dragStarted}
                 />
-                <Droppable
-                  droppableId={state.id}
-                  isDropDisabled={!userRoleCanDrop || undroppableStates.includes(state.id)}
-                >
+                <Droppable droppableId={state.id} isDropDisabled={isDropDisabled}>
                   {(provided, snapshot) => (
                     <Card
                       // __unstable_checkered={!userRoleCanDrop}

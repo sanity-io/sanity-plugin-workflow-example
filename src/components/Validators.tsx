@@ -1,6 +1,7 @@
 import React from 'react'
 import {useToast, Button} from '@sanity/ui'
 import {useClient} from 'sanity'
+import {UserExtended} from 'sanity-plugin-utils'
 
 import FloatingCard from './FloatingCard'
 import {API_VERSION, ORDER_MIN} from '../constants'
@@ -8,7 +9,7 @@ import {SanityDocumentWithMetadata, State} from '../types'
 
 type ValidatorsProps = {
   data: SanityDocumentWithMetadata[]
-  userList: any[]
+  userList: UserExtended[]
   states: State[]
 }
 

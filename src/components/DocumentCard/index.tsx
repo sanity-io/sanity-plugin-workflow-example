@@ -105,7 +105,7 @@ export function DocumentCard(props: DocumentCardProps) {
     : validation.validation.some((v) => v.level === 'error')
 
   return (
-    <Box paddingY={2} paddingX={3}>
+    <Box paddingBottom={3} paddingX={3}>
       <Card radius={2} shadow={isDragging ? 3 : 1} tone={cardTone}>
         <Stack>
           <Card

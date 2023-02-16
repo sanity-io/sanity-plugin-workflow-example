@@ -19,12 +19,7 @@ const UserAssignmentInput: FunctionComponent<
 
   return (
     <Card border padding={1}>
-      <UserAssignment
-        userList={userList}
-        assignees={stringValue}
-        documentId={String(documentId)}
-        isOpen
-      />
+      <UserAssignment userList={userList} assignees={stringValue} documentId={String(documentId)} />
     </Card>
   )
 }

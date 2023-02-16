@@ -1,9 +1,10 @@
 import {Flex, Card, Button} from '@sanity/ui'
 import {useCurrentUser, UserAvatar, useSchema} from 'sanity'
 import {ResetIcon} from '@sanity/icons'
+import {UserExtended} from 'sanity-plugin-utils'
 
 type FiltersProps = {
-  uniqueAssignedUsers: any[]
+  uniqueAssignedUsers: UserExtended[]
   selectedUsers: string[]
   schemaTypes: string[]
   selectedSchemaTypes: string[]

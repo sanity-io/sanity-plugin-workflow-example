@@ -10,11 +10,10 @@ type UserAssignmentProps = {
   userList: User[]
   assignees: string[]
   documentId: string
-  isOpen: boolean
 }
 
 export default function UserAssignment(props: UserAssignmentProps) {
-  const {assignees, userList, documentId, isOpen} = props
+  const {assignees, userList, documentId} = props
   const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
 
@@ -97,7 +96,6 @@ export default function UserAssignment(props: UserAssignmentProps) {
       onAdd={addAssignee}
       onClear={clearAssignees}
       onRemove={removeAssignee}
-      open={isOpen}
     />
   )
 }
