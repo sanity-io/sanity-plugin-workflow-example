@@ -42,21 +42,11 @@ export const workflow = definePlugin<WorkflowConfig>((config = DEFAULT_CONFIG) =
           return prev
         }
 
-        let filteredPrev = prev
-
-        // If any workflow states make use of un/publish operations...
-        if (states.some((state) => state.operation)) {
-          // ...remove 'discard changes' and 'publish' actions
-          filteredPrev = prev.filter(
-            ({action}) => action && !['publish', 'unpublish'].includes(action)
-          )
-        }
-
         return [
           (props) => UpdateStateAction(props, states, 'promote'),
           (props) => AssignAction(props, states),
           (props) => UpdateStateAction(props, states, 'demote'),
-          ...filteredPrev,
+          ...prev,
         ]
       },
       badges: (prev, context) => {

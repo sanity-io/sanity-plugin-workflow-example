@@ -1,12 +1,12 @@
 import {SanityDocumentLike} from 'sanity'
 
-export type Operation = 'publish' | 'unpublish'
+// export type Operation = 'publish' | 'unpublish'
 
 export type State = {
   id: string
   transitions: string[]
   title: string
-  operation?: Operation
+  // operation?: Operation
   roles?: string[]
   requireAssignment?: boolean
   // From document badges

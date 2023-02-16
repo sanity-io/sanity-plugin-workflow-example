@@ -1,9 +1,12 @@
 import {Flex, Card, Badge, BadgeTone} from '@sanity/ui'
-import {InfoOutlineIcon, UserIcon, PublishIcon, UnpublishIcon} from '@sanity/icons'
+import {InfoOutlineIcon, UserIcon} from '@sanity/icons'
 import styled, {css} from 'styled-components'
 
 import {Status} from './Status'
-import {Operation, State} from '../../types'
+import {
+  // Operation,
+  State,
+} from '../../types'
 
 type StateTitleProps = {
   state: State
@@ -11,7 +14,7 @@ type StateTitleProps = {
   userRoleCanDrop: boolean
   isDropDisabled: boolean
   draggingFrom: string
-  operation?: Operation
+  // operation?: Operation
 }
 
 const StyledStickyCard = styled(Card)(
@@ -23,7 +26,7 @@ const StyledStickyCard = styled(Card)(
 )
 
 export default function StateTitle(props: StateTitleProps) {
-  const {state, requireAssignment, userRoleCanDrop, isDropDisabled, draggingFrom, operation} = props
+  const {state, requireAssignment, userRoleCanDrop, isDropDisabled, draggingFrom} = props
 
   let tone: BadgeTone = 'default'
   const isSource = draggingFrom === state.id
@@ -54,7 +57,7 @@ export default function StateTitle(props: StateTitleProps) {
             icon={UserIcon}
           />
         ) : null}
-        {operation ? (
+        {/* {operation ? (
           <Status
             text={
               operation === 'publish'
@@ -63,7 +66,7 @@ export default function StateTitle(props: StateTitleProps) {
             }
             icon={operation === 'publish' ? PublishIcon : UnpublishIcon}
           />
-        ) : null}
+        ) : null} */}
       </Flex>
     </StyledStickyCard>
   )

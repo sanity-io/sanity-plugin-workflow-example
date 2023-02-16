@@ -59,8 +59,6 @@ Documents can be promoted and demoted in the workflow with the provided Document
     id: 'inReview',
     title: 'In Review',
     // Optional settings:
-    // Will un/publish the Document when moved to this State
-    operation: 'publish', // or 'unpublish'
     // Used for the color of the Document Badge
     color: 'success',
     // Will enable document actions and drag-and-drop for only users with these Role
@@ -71,6 +69,14 @@ Documents can be promoted and demoted in the workflow with the provided Document
     transitions: ['changesRequested', 'approved']
 }
 ```
+
+## Differences from the Sanity Studio v2 Workflow Demo
+
+This plugin is largely based on the original Workflow Demo built into a Sanity Studio v2 project. The major differences are:
+
+* This plugin can be more easily installed and configured, not just code examples built into a Studio project
+* Documents must "opt in" to and be removed from the Workflow, in the previous version all documents were in the workflow which would fill up the interface
+* User Roles and Assignment can affect the Workflow
 
 ## License
 

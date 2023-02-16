@@ -1,12 +1,12 @@
 /* eslint-disable react/prop-types */
-import {useEffect, useMemo} from 'react'
-import {Box, Card, CardTone, Flex, Stack, useTheme, useToast} from '@sanity/ui'
+import {useMemo} from 'react'
+import {Box, Card, CardTone, Flex, Stack, useTheme} from '@sanity/ui'
 import {DragHandleIcon} from '@sanity/icons'
-import {useSchema, SchemaType, useDocumentOperation, useValidationStatus} from 'sanity'
+import {useSchema, SchemaType, useValidationStatus} from 'sanity'
 import {Preview} from 'sanity'
 
 import EditButton from './EditButton'
-import {SanityDocumentWithMetadata, State, User} from '../../types'
+import {SanityDocumentWithMetadata, User} from '../../types'
 import UserDisplay from '../UserDisplay'
 import {DraftStatus} from './core/DraftStatus'
 import {PublishedStatus} from './core/PublishedStatus'
@@ -17,7 +17,7 @@ type DocumentCardProps = {
   userRoleCanDrop: boolean
   isDragging: boolean
   item: SanityDocumentWithMetadata
-  states: State[]
+  // states: State[]
   toggleInvalidDocumentId: (documentId: string, action: 'ADD' | 'REMOVE') => void
   userList: User[]
 }
@@ -28,50 +28,51 @@ export function DocumentCard(props: DocumentCardProps) {
     userRoleCanDrop,
     isDragging,
     item,
-    states,
+    // states,
     toggleInvalidDocumentId,
     userList,
   } = props
   const {assignees = [], documentId} = item._metadata ?? {}
   const schema = useSchema()
-  const currentState = useMemo(
-    () => states.find((state) => state.id === item._metadata?.state),
-    [states, item]
-  )
 
-  // Perform operation
-  // If state has changed and the document needs to be un/published
-  const ops = useDocumentOperation(documentId ?? ``, item._type)
-  const toast = useToast()
+  // Perform document operations after State changes
+  // If State has changed and the document needs to be un/published
+  // This functionality was deemed too dangerous / unexpected
+  // Revisit with improved UX
+  // const currentState = useMemo(
+  //   () => states.find((state) => state.id === item._metadata?.state),
+  //   [states, item]
+  // )
+  // const ops = useDocumentOperation(documentId ?? ``, item._type)
+  // const toast = useToast()
 
-  // Perform document operations after state changes
-  useEffect(() => {
-    const isDraft = item._id.startsWith('drafts.')
+  // useEffect(() => {
+  //   const isDraft = item._id.startsWith('drafts.')
 
-    if (isDraft && currentState?.operation === 'publish' && !item?._metadata?.optimistic) {
-      if (!ops.publish.disabled) {
-        ops.publish.execute()
-        toast.push({
-          title: 'Published Document',
-          description: documentId,
-          status: 'success',
-        })
-      }
-    } else if (
-      !isDraft &&
-      currentState?.operation === 'unpublish' &&
-      !item?._metadata?.optimistic
-    ) {
-      if (!ops.unpublish.disabled) {
-        ops.unpublish.execute()
-        toast.push({
-          title: 'Unpublished Document',
-          description: documentId,
-          status: 'success',
-        })
-      }
-    }
-  }, [currentState, documentId, item, ops, toast])
+  //   if (isDraft && currentState?.operation === 'publish' && !item?._metadata?.optimistic) {
+  //     if (!ops.publish.disabled) {
+  //       ops.publish.execute()
+  //       toast.push({
+  //         title: 'Published Document',
+  //         description: documentId,
+  //         status: 'success',
+  //       })
+  //     }
+  //   } else if (
+  //     !isDraft &&
+  //     currentState?.operation === 'unpublish' &&
+  //     !item?._metadata?.optimistic
+  //   ) {
+  //     if (!ops.unpublish.disabled) {
+  //       ops.unpublish.execute()
+  //       toast.push({
+  //         title: 'Unpublished Document',
+  //         description: documentId,
+  //         status: 'success',
+  //       })
+  //     }
+  //   }
+  // }, [currentState, documentId, item, ops, toast])
 
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? `transparent` : `default`

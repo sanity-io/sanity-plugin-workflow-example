@@ -229,7 +229,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                   state={state}
                   requireAssignment={state.requireAssignment ?? false}
                   userRoleCanDrop={userRoleCanDrop}
-                  operation={state.operation}
+                  // operation={state.operation}
                   isDropDisabled={isDropDisabled}
                   draggingFrom={draggingFrom}
                 />
@@ -277,17 +277,14 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                                     {...draggableProvided.draggableProps}
                                     {...draggableProvided.dragHandleProps}
                                   >
-                                    {/* <Card border padding={2} margin={2}>
-                                      {item?._metadata?.documentId}
-                                    </Card> */}
                                     <DocumentCard
                                       userRoleCanDrop={userRoleCanDrop}
                                       isDragDisabled={isDragDisabled}
                                       isDragging={draggableSnapshot.isDragging}
                                       item={item}
-                                      states={states}
                                       toggleInvalidDocumentId={toggleInvalidDocumentId}
                                       userList={userList}
+                                      // states={states}
                                     />
                                   </div>
                                 )}
