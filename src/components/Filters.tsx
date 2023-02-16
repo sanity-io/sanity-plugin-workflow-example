@@ -1,5 +1,5 @@
-import {Box, Flex, Card, Button} from '@sanity/ui'
-import {UserAvatar, useSchema} from 'sanity'
+import {Flex, Card, Button} from '@sanity/ui'
+import {useCurrentUser, UserAvatar, useSchema} from 'sanity'
 import {ResetIcon} from '@sanity/icons'
 
 type FiltersProps = {
@@ -22,34 +22,49 @@ export default function Filters(props: FiltersProps) {
     resetSelectedUsers,
     toggleSelectedSchemaType,
   } = props
+  const me = useCurrentUser()
 
   const schema = useSchema()
 
   return (
     <Card tone="primary" padding={2} borderBottom style={{overflowX: 'hidden'}}>
-      <Flex justify="space-between">
-        {uniqueAssignedUsers.length > 0 ? (
-          <Flex align="center" gap={1}>
-            {uniqueAssignedUsers.map((user) => (
+      <Flex align="center">
+        <Flex align="center" gap={1} flex={1}>
+          {me?.id ? (
+            <>
               <Button
-                key={user.id}
-                padding={1}
-                mode={selectedUsers.includes(user.id) ? `default` : `bleed`}
-                onClick={() => toggleSelectedUser(user.id)}
+                padding={0}
+                mode={selectedUsers.includes(me.id) ? `default` : `bleed`}
+                onClick={() => toggleSelectedUser(me.id)}
               >
-                <UserAvatar user={user} size={1} />
+                <Flex padding={1} align="center" justify="center">
+                  <UserAvatar user={me.id} size={1} withTooltip />
+                </Flex>
               </Button>
-            ))}
+              <Card borderRight style={{height: 30}} tone="inherit" />
+            </>
+          ) : null}
+          {uniqueAssignedUsers.length > 0 &&
+            uniqueAssignedUsers
+              .filter((user) => (me?.id ? user.id !== me.id : true))
+              .map((user) => (
+                <Button
+                  key={user.id}
+                  padding={0}
+                  mode={selectedUsers.includes(user.id) ? `default` : `bleed`}
+                  onClick={() => toggleSelectedUser(user.id)}
+                >
+                  <Flex padding={1} align="center" justify="center">
+                    <UserAvatar user={user} size={1} withTooltip />
+                  </Flex>
+                </Button>
+              ))}
 
-            {selectedUsers.length > 0 ? (
-              <Card borderLeft marginLeft={2} paddingLeft={3} tone="inherit">
-                <Button text="Clear" onClick={resetSelectedUsers} mode="ghost" icon={ResetIcon} />
-              </Card>
-            ) : null}
-          </Flex>
-        ) : (
-          <Box flex={1} />
-        )}
+          {selectedUsers.length > 0 ? (
+            <Button text="Clear" onClick={resetSelectedUsers} mode="ghost" icon={ResetIcon} />
+          ) : null}
+        </Flex>
+
         {schemaTypes.length > 0 ? (
           <Flex align="center" gap={1}>
             {schemaTypes.map((type) => (

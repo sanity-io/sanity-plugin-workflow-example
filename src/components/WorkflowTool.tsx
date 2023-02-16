@@ -1,5 +1,5 @@
 import React from 'react'
-import {Flex, Card, Grid, Spinner, Label, Container, useTheme} from '@sanity/ui'
+import {Flex, Card, Grid, Spinner, Container, useTheme} from '@sanity/ui'
 import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
 import {Tool, useCurrentUser} from 'sanity'
 import {
@@ -20,6 +20,7 @@ import Validators from './Validators'
 import Filters from './Filters'
 import {filterItemsAndSort} from '../helpers/filterItemsAndSort'
 import {arraysContainMatchingString} from '../helpers/arraysContainMatchingString'
+import StateTitle from './StateTitle'
 
 type WorkflowToolProps = {
   tool: Tool<WorkflowConfig>
@@ -196,17 +197,15 @@ export default function WorkflowTool(props: WorkflowToolProps) {
             const userRoleCanDrop = state?.roles?.length
               ? arraysContainMatchingString(state.roles, userRoleNames)
               : true
-            // const stateTone = userRoleCanDrop ? defaultCardTone : `caution`
 
             return (
               <Card key={state.id} borderLeft={stateIndex > 0} tone={defaultCardTone}>
-                <Card
-                  // __unstable_checkered={!userRoleCanDrop}
-                  padding={3}
-                  style={{pointerEvents: `none`}}
-                >
-                  <Label muted={!userRoleCanDrop}>{state.title}</Label>
-                </Card>
+                <StateTitle
+                  title={state.title}
+                  requireAssignment={state.requireAssignment ?? false}
+                  userRoleCanDrop={userRoleCanDrop}
+                  operation={state.operation}
+                />
                 <Droppable
                   droppableId={state.id}
                   isDropDisabled={!userRoleCanDrop || undroppableStates.includes(state.id)}
