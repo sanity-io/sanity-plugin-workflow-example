@@ -268,12 +268,17 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                             !(state.requireAssignment
                               ? state.requireAssignment && meInAssignees
                               : true)
+                          const {documentId} = item._metadata ?? {}
+
+                          if (!documentId) {
+                            return null
+                          }
 
                           return (
                             <Draggable
                               // The metadata's documentId is always the published one to avoid rerendering
-                              key={String(item?._metadata?.documentId)}
-                              draggableId={String(item?._metadata?.documentId)}
+                              key={documentId}
+                              draggableId={documentId}
                               index={itemIndex}
                               isDragDisabled={isDragDisabled}
                             >
@@ -290,7 +295,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                                     item={item}
                                     toggleInvalidDocumentId={toggleInvalidDocumentId}
                                     userList={userList}
-                                    // states={states}
+                                    states={states}
                                   />
                                 </div>
                               )}

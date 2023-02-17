@@ -19,10 +19,12 @@ export default function UserAssignment(props: UserAssignmentProps) {
 
   const addAssignee = React.useCallback(
     (userId: string) => {
-      if (!userId) {
+      const user = userList.find((u) => u.id === userId)
+
+      if (!userId || !user) {
         return toast.push({
           status: 'error',
-          title: 'No user selected',
+          title: 'Could not find User',
         })
       }
 
@@ -33,8 +35,7 @@ export default function UserAssignment(props: UserAssignmentProps) {
         .commit()
         .then(() => {
           return toast.push({
-            title: `Assigned user to document`,
-            description: userId,
+            title: `Added ${user.displayName} to assignees`,
             status: 'success',
           })
         })
@@ -48,16 +49,30 @@ export default function UserAssignment(props: UserAssignmentProps) {
           })
         })
     },
-    [documentId, client, toast]
+    [documentId, client, toast, userList]
   )
 
   const removeAssignee = React.useCallback(
     (userId: string) => {
-      client
+      const user = userList.find((u) => u.id === userId)
+
+      if (!userId || !user) {
+        return toast.push({
+          status: 'error',
+          title: 'Could not find User',
+        })
+      }
+
+      return client
         .patch(`workflow-metadata.${documentId}`)
         .unset([`assignees[@ == "${userId}"]`])
         .commit()
-        .then((res) => res)
+        .then(() => {
+          return toast.push({
+            title: `Removed ${user.displayName} from assignees`,
+            status: 'success',
+          })
+        })
         .catch((err) => {
           console.error(err)
 
@@ -68,15 +83,20 @@ export default function UserAssignment(props: UserAssignmentProps) {
           })
         })
     },
-    [client, toast, documentId]
+    [client, toast, documentId, userList]
   )
 
   const clearAssignees = React.useCallback(() => {
-    client
+    return client
       .patch(`workflow-metadata.${documentId}`)
       .unset([`assignees`])
       .commit()
-      .then((res) => res)
+      .then(() => {
+        return toast.push({
+          title: `Cleared assignees`,
+          status: 'success',
+        })
+      })
       .catch((err) => {
         console.error(err)
 

@@ -8,7 +8,7 @@ import UserAssignment from '../components/UserAssignment'
 import {useWorkflowMetadata} from '../hooks/useWorkflowMetadata'
 import {State} from '../types'
 
-export function AssignAction(props: DocumentActionProps, states: State[]) {
+export function AssignWorkflow(props: DocumentActionProps, states: State[]) {
   const {id} = props
   const [isDialogOpen, setDialogOpen] = useState(false)
   const userList = useProjectUsers({apiVersion: API_VERSION})
@@ -16,6 +16,10 @@ export function AssignAction(props: DocumentActionProps, states: State[]) {
 
   if (error) {
     console.error(error)
+  }
+
+  if (!data?.metadata) {
+    return null
   }
 
   return {

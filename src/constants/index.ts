@@ -13,14 +13,14 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
       title: 'In review',
       color: 'primary',
       roles: ['editor', 'administrator'],
-      transitions: ['changesRequested'],
+      transitions: ['changesRequested', 'approved'],
     },
     {
       id: 'changesRequested',
       title: 'Changes requested',
       color: 'warning',
       roles: ['editor', 'administrator'],
-      transitions: ['inReview', 'approved'],
+      transitions: ['approved'],
     },
     {
       id: 'approved',

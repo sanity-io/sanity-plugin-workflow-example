@@ -40,7 +40,7 @@ Add it as a plugin in sanity.config.ts (or .js):
             // Required, list of document type names
             // schemaTypes: ['article', 'product'],
             schemaTypes: [],
-            // Optional, see type definitions for the structure of these
+            // Optional, see below
             states: [],
          })
      ]
@@ -49,9 +49,9 @@ Add it as a plugin in sanity.config.ts (or .js):
 
 ## Configuring "States"
 
-The plugin comes with a default set of five "States". These are tracked by the plugin creating a separate "metadata" document for each document in the workflow. 
+The plugin comes with a default set of "States". These are tracked by the plugin creating a separate "metadata" document for each document that has begun the Workflow. 
 
-Documents can be promoted and demoted in the workflow with the provided Document Actions as well as a drag-and-drop interface. The settings below are not enforced by the API, custom access control rules could be used to enforce them. 
+Documents can be promoted and demoted in the Workflow with the provided Document Actions as well as a drag-and-drop custom Tool. The settings below are not enforced by the API, custom access control rules could be used to do so. 
 
 ```ts
 {
@@ -70,13 +70,27 @@ Documents can be promoted and demoted in the workflow with the provided Document
 }
 ```
 
-## Differences from the Sanity Studio v2 Workflow Demo
+### Intended content operations with this plugin
+
+A content creator composes a new document of one of the configured Schema types. The document is a "Draft", but not automatically added to the Workflow.
+
+The creator clicks the "Begin Workflow" Document Action to create a new "metadata" document and add the document to the first State in the Workflow. Using the default States, the document is now "In Review".
+
+The document is now visible in the Workflow Tool. The creator can drag and drop the document to the next State in the Workflow, "Changes Requested". Other users may be "assigned" to the document. In the default State configuration, only an assigned user can move the document into the final "Approved" state.
+
+An administrator can move the document into Changes Requested or Approved.
+
+With the document now Approved, a user may also return to the document and Publish it, by whatever means that make sense to your use case. Such as scheduled publishing or migrating it to a new dataset.
+
+Once the Workflow is complete, the metadata can be removed by using the "Complete Workflow" document action.
+
+### Differences from the Sanity Studio v2 Workflow Demo
 
 This plugin is largely based on the original Workflow Demo built into a Sanity Studio v2 project. The major differences are:
 
 * This plugin can be more easily installed and configured, not just code examples built into a Studio project
-* Documents must "opt in" to and be removed from the Workflow, in the previous version all documents were in the workflow which would fill up the interface
-* User Roles and Assignment can affect the Workflow. Set rules to enforce which States documents can move between, and if being assigned to a document is required to move it to a new State
+* Documents must "opt-in" to and removed from the Workflow, in the previous version all documents were in the workflow which would fill up the interface
+* User Roles and Assignments can affect the Workflow. Set rules to enforce which States documents can move between and if being assigned to a document is required to move it to a new State
 * Ability to filter Schema types and assigned Users
 
 ## License

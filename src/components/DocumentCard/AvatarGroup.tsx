@@ -11,7 +11,7 @@ type AvatarGroupProps = {
 
 export default function AvatarGroup(props: AvatarGroupProps) {
   const currentUser = useCurrentUser()
-  const {users, max = 3} = props
+  const {users, max = 4} = props
 
   const len = users?.length
   const {me, visibleUsers} = React.useMemo(() => {

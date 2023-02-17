@@ -1,23 +1,24 @@
 /* eslint-disable react/prop-types */
 import {useMemo} from 'react'
-import {Box, Card, CardTone, Flex, Stack, Text, useTheme} from '@sanity/ui'
+import {Box, Card, CardTone, Flex, Stack, useTheme} from '@sanity/ui'
 import {DragHandleIcon} from '@sanity/icons'
 import {useSchema, SchemaType, useValidationStatus} from 'sanity'
 import {Preview} from 'sanity'
 
 import EditButton from './EditButton'
-import {SanityDocumentWithMetadata, User} from '../../types'
+import {SanityDocumentWithMetadata, State, User} from '../../types'
 import UserDisplay from '../UserDisplay'
 import {DraftStatus} from './core/DraftStatus'
 import {PublishedStatus} from './core/PublishedStatus'
 import {ValidationStatus} from './ValidationStatus'
+import CompleteButton from './CompleteButton'
 
 type DocumentCardProps = {
   isDragDisabled: boolean
   userRoleCanDrop: boolean
   isDragging: boolean
   item: SanityDocumentWithMetadata
-  // states: State[]
+  states: State[]
   toggleInvalidDocumentId: (documentId: string, action: 'ADD' | 'REMOVE') => void
   userList: User[]
 }
@@ -28,7 +29,7 @@ export function DocumentCard(props: DocumentCardProps) {
     userRoleCanDrop,
     isDragging,
     item,
-    // states,
+    states,
     toggleInvalidDocumentId,
     userList,
   } = props
@@ -114,6 +115,11 @@ export function DocumentCard(props: DocumentCardProps) {
     [validation]
   )
 
+  const isLastState = useMemo(
+    () => states[states.length - 1].id === item._metadata?.state,
+    [states, item._metadata.state]
+  )
+
   return (
     <Box paddingBottom={3} paddingX={3}>
       <Card radius={2} shadow={isDragging ? 3 : 1} tone={cardTone}>
@@ -134,7 +140,7 @@ export function DocumentCard(props: DocumentCardProps) {
                   schemaType={schema.get(item._type) as SchemaType}
                 />
               </Box>
-              <Text>{item._metadata.order}</Text>
+              {/* <Text>{item._metadata.order}</Text> */}
               <Box style={{flexShrink: 0}}>
                 {hasError || isDragDisabled ? null : <DragHandleIcon />}
               </Box>
@@ -159,6 +165,9 @@ export function DocumentCard(props: DocumentCardProps) {
               <DraftStatus document={item} />
               <PublishedStatus document={item} />
               <EditButton id={item._id} type={item._type} disabled={!userRoleCanDrop} />
+              {isLastState ? (
+                <CompleteButton documentId={documentId} disabled={!userRoleCanDrop} />
+              ) : null}
             </Flex>
           </Card>
         </Stack>

@@ -1,12 +1,15 @@
-import {definePlugin} from 'sanity'
+import {definePlugin, DocumentActionProps} from 'sanity'
 
 import {DEFAULT_CONFIG} from './constants'
-import {StateBadge} from './badges'
 import {WorkflowConfig} from './types'
 import {workflowTool} from './tools'
 import metadata from './schema/workflow/workflow.metadata'
-import {AssignAction} from './actions/AssignAction'
+import {AssignWorkflow} from './actions/AssignWorkflow'
 import {BeginWorkflow} from './actions/BeginWorkflow'
+import {CompleteWorkflow} from './actions/CompleteWorkflow'
+import {AssigneesBadge} from './badges/AssigneesBadge'
+import {StateBadge} from './badges/StateBadge'
+import {UpdateWorkflow} from './actions/UpdateWorkflow'
 
 export const workflow = definePlugin<WorkflowConfig>((config = DEFAULT_CONFIG) => {
   const {schemaTypes, states} = {...DEFAULT_CONFIG, ...config}
@@ -20,32 +23,28 @@ export const workflow = definePlugin<WorkflowConfig>((config = DEFAULT_CONFIG) =
     schema: {
       types: [metadata(states)],
     },
-    // Removed StateTimeline since the Document Actions can handle the same logic, may revisit
-    // form: {
-    //   components: {
-    //     input: (props) => {
-    //       if (
-    //         props?.schemaType?.type?.name === 'document' &&
-    //         schemaTypes.includes(props.schemaType.name)
-    //       ) {
-    //         const newProps = {...props, states}
-    //         return StateTimeline(newProps as StateTimelineProps)
-    //       }
-    //       return props.renderDefault(props)
-    //     },
-    //   },
-    // },
+    // TODO: Remove 'workflow.metadata' from list of new document types
+    // ...
     document: {
       actions: (prev, context) => {
         if (!schemaTypes.includes(context.schemaType)) {
           return prev
         }
 
+        // TODO: Augment 'publish' and 'unpublish' to be disabled if a document IS in Workflow
+        // This would be best done with a listening query here, but we don't have access to documentStore
+
+        // TODO: Performance improvements:
+        // Each of these actions registers their own listener!
+        // One should probably be responsible for listening and storing the response in context
+
         return [
-          // (props) => UpdateStateAction(props, states, 'promote'),
           (props) => BeginWorkflow(props, states),
-          (props) => AssignAction(props, states),
-          // (props) => UpdateStateAction(props, states, 'demote'),
+          (props) => AssignWorkflow(props, states),
+          ...states.map(
+            (state) => (props: DocumentActionProps) => UpdateWorkflow(props, states, state)
+          ),
+          (props) => CompleteWorkflow(props, states),
           ...prev,
         ]
       },
@@ -54,7 +53,17 @@ export const workflow = definePlugin<WorkflowConfig>((config = DEFAULT_CONFIG) =
           return prev
         }
 
-        return [(props) => StateBadge(props, states), ...prev]
+        const {documentId, currentUser} = context
+
+        if (!documentId) {
+          return prev
+        }
+
+        return [
+          () => StateBadge(states, documentId),
+          () => AssigneesBadge(states, documentId, currentUser),
+          ...prev,
+        ]
       },
     },
     tools: [workflowTool({schemaTypes, states})],
