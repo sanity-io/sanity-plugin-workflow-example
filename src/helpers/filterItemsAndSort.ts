@@ -13,12 +13,16 @@ export function filterItemsAndSort(
       // Only items with selected users, if the document has any assigned users
       .filter((item) =>
         selectedUsers.length && item._metadata?.assignees?.length
-          ? item._metadata?.assignees.some((assignee) => selectedUsers.includes(assignee))
+          ? item._metadata?.assignees.some((assignee) =>
+              selectedUsers.includes(assignee)
+            )
           : !selectedUsers.length
       )
       // Only items of selected schema types, if any are selected
       .filter((item) =>
-        selectedSchemaTypes.length ? selectedSchemaTypes.includes(item._type) : true
+        selectedSchemaTypes.length
+          ? selectedSchemaTypes.includes(item._type)
+          : true
       )
       // Sort by metadata order
       .sort((a, b) => {
