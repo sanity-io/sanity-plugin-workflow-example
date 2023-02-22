@@ -1,18 +1,34 @@
-import React from 'react'
 import {SanityDocumentLike} from 'sanity'
+
+// export type Operation = 'publish' | 'unpublish'
 
 export type State = {
   id: string
+  transitions: string[]
   title: string
-  operation?: 'publish' | 'unpublish' | null
-  // From badge props
+  // operation?: Operation
+  roles?: string[]
+  requireAssignment?: boolean
+  // From document badges
   color?: 'primary' | 'success' | 'warning' | 'danger'
-  icon?: React.ReactNode | React.ComponentType
 }
+
+export type StateCheck<Id, States> = {
+  id: Id
+  // Transitions is an array of State ids
+  transitions?: States extends {id: infer Id2}[] ? Id2[] : never
+} & State
 
 export type WorkflowConfig = {
   schemaTypes: string[]
   states?: State[]
+}
+
+export function defineStates<
+  Id extends string,
+  States extends StateCheck<Id, States>[]
+>(states: States): States {
+  return states
 }
 
 export type User = {
@@ -43,8 +59,13 @@ export type Metadata = SanityDocumentLike & {
   assignees: string[]
   documentId: string
   state: string
+  order: number
 }
 
-export type SanityDocumentWithMetadata = SanityDocumentLike & {
-  _metadata: Metadata | null
+export type SanityDocumentWithMetadata = {
+  _metadata: Metadata
+  _id: string
+  _type: string
+  _rev: string
+  _updatedAt: string
 }

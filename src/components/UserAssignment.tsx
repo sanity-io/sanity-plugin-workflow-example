@@ -1,11 +1,10 @@
 import React from 'react'
-import {Button, Popover, useToast} from '@sanity/ui'
-import {AddIcon} from '@sanity/icons'
+import {useToast} from '@sanity/ui'
 import {UserSelectMenu} from 'sanity-plugin-utils'
 import {useClient} from 'sanity'
 
-import AvatarGroup from './DocumentCard/AvatarGroup'
 import {User} from '../types'
+import {API_VERSION} from '../constants'
 
 type UserAssignmentProps = {
   userList: User[]
@@ -15,28 +14,28 @@ type UserAssignmentProps = {
 
 export default function UserAssignment(props: UserAssignmentProps) {
   const {assignees, userList, documentId} = props
-  const client = useClient()
+  const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
-  const [openId, setOpenId] = React.useState<string>(``)
 
   const addAssignee = React.useCallback(
     (userId: string) => {
-      if (!userId) {
+      const user = userList.find((u) => u.id === userId)
+
+      if (!userId || !user) {
         return toast.push({
           status: 'error',
-          title: 'No user selected',
+          title: 'Could not find User',
         })
       }
 
-      client
+      return client
         .patch(`workflow-metadata.${documentId}`)
         .setIfMissing({assignees: []})
         .insert(`after`, `assignees[-1]`, [userId])
         .commit()
         .then(() => {
           return toast.push({
-            title: `Assigned user to document`,
-            description: userId,
+            title: `Added ${user.displayName} to assignees`,
             status: 'success',
           })
         })
@@ -50,90 +49,73 @@ export default function UserAssignment(props: UserAssignmentProps) {
           })
         })
     },
-    [documentId, client, toast]
+    [documentId, client, toast, userList]
   )
 
   const removeAssignee = React.useCallback(
-    (id: string, userId: string) => {
-      client
-        .patch(`workflow-metadata.${id}`)
+    (userId: string) => {
+      const user = userList.find((u) => u.id === userId)
+
+      if (!userId || !user) {
+        return toast.push({
+          status: 'error',
+          title: 'Could not find User',
+        })
+      }
+
+      return client
+        .patch(`workflow-metadata.${documentId}`)
         .unset([`assignees[@ == "${userId}"]`])
         .commit()
-        .then((res) => res)
+        .then(() => {
+          return toast.push({
+            title: `Removed ${user.displayName} from assignees`,
+            status: 'success',
+          })
+        })
         .catch((err) => {
           console.error(err)
 
           return toast.push({
             title: `Failed to remove assignee`,
-            description: id,
+            description: documentId,
             status: 'error',
           })
         })
     },
-    [client, toast]
+    [client, toast, documentId, userList]
   )
 
-  const clearAssignees = React.useCallback(
-    (id: string) => {
-      client
-        .patch(`workflow-metadata.${id}`)
-        .unset([`assignees`])
-        .commit()
-        .then((res) => res)
-        .catch((err) => {
-          console.error(err)
-
-          return toast.push({
-            title: `Failed to clear assignees`,
-            description: id,
-            status: 'error',
-          })
+  const clearAssignees = React.useCallback(() => {
+    return client
+      .patch(`workflow-metadata.${documentId}`)
+      .unset([`assignees`])
+      .commit()
+      .then(() => {
+        return toast.push({
+          title: `Cleared assignees`,
+          status: 'success',
         })
-    },
-    [client, toast]
-  )
+      })
+      .catch((err) => {
+        console.error(err)
+
+        return toast.push({
+          title: `Failed to clear assignees`,
+          description: documentId,
+          status: 'error',
+        })
+      })
+  }, [client, toast, documentId])
 
   return (
-    <Popover
-      // @ts-ignore
-      // ref={setPopoverRef}
-      // onKeyDown={handleKeyDown}
-      content={
-        <UserSelectMenu
-          style={{maxHeight: 300}}
-          value={assignees || []}
-          userList={userList}
-          onAdd={addAssignee}
-          onClear={clearAssignees}
-          onRemove={removeAssignee}
-          open={openId === documentId}
-        />
-      }
-      portal
-      open={openId === documentId}
-    >
-      {!assignees || assignees.length === 0 ? (
-        <Button
-          onClick={() => setOpenId(documentId)}
-          fontSize={1}
-          padding={2}
-          tabIndex={-1}
-          icon={AddIcon}
-          text="Assign"
-          tone="positive"
-        />
-      ) : (
-        <Button
-          onClick={() => setOpenId(documentId)}
-          padding={0}
-          mode="bleed"
-          style={{width: `100%`}}
-        >
-          <AvatarGroup
-            users={userList.filter((u) => assignees.includes(u.id))}
-          />
-        </Button>
-      )}
-    </Popover>
+    <UserSelectMenu
+      style={{maxHeight: 300}}
+      value={assignees || []}
+      userList={userList}
+      onAdd={addAssignee}
+      onClear={clearAssignees}
+      onRemove={removeAssignee}
+    />
   )
 }

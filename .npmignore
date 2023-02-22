@@ -1,5 +1,6 @@
 /test
 /coverage
+/demo
 .editorconfig
 .eslintrc
 .gitignore

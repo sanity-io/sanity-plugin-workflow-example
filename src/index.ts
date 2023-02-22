@@ -1,40 +1,15 @@
-import {definePlugin} from 'sanity'
-import {CheckmarkIcon, SplitVerticalIcon} from '@sanity/icons'
+import {definePlugin, DocumentActionProps} from 'sanity'
 
-import WorkflowTool from './components/WorkflowTool'
+import {DEFAULT_CONFIG} from './constants'
 import {WorkflowConfig} from './types'
-import metadata from './schema/workflow/metadata'
-import {StateBadge} from './badges'
-import {PromoteAction} from './actions/PromoteAction'
-import {DemoteAction} from './actions/DemoteAction'
-//import StateTimeline from './components/StateTimeline'
-
-const DEFAULT_CONFIG: WorkflowConfig = {
-  schemaTypes: [],
-  states: [
-    {id: 'draft', title: 'Draft', operation: 'unpublish'},
-    {id: 'inReview', title: 'In review', operation: null, color: 'primary'},
-    {
-      id: 'approved',
-      title: 'Approved',
-      operation: null,
-      color: 'success',
-      icon: CheckmarkIcon,
-    },
-    {
-      id: 'changesRequested',
-      title: 'Changes requested',
-      operation: null,
-      color: 'warning',
-    },
-    {
-      id: 'published',
-      title: 'Published',
-      operation: 'publish',
-      color: 'success',
-    },
-  ],
-}
+import {workflowTool} from './tools'
+import metadata from './schema/workflow/workflow.metadata'
+import {AssignWorkflow} from './actions/AssignWorkflow'
+import {BeginWorkflow} from './actions/BeginWorkflow'
+import {CompleteWorkflow} from './actions/CompleteWorkflow'
+import {AssigneesBadge} from './badges/AssigneesBadge'
+import {StateBadge} from './badges/StateBadge'
+import {UpdateWorkflow} from './actions/UpdateWorkflow'
 
 export const workflow = definePlugin<WorkflowConfig>(
   (config = DEFAULT_CONFIG) => {
@@ -49,26 +24,29 @@ export const workflow = definePlugin<WorkflowConfig>(
       schema: {
         types: [metadata(states)],
       },
-      // form: {
-      //   components: {
-      //     item: (props) => {
-      //       console.log(props)
-      //       // if (props.id === `root` && schemaTypes.includes(props.schemaType.name)) {
-      //       //   return StateTimeline(props)
-      //       // }
-      //       return props.renderDefault(props)
-      //     },
-      //   },
-      // },
+      // TODO: Remove 'workflow.metadata' from list of new document types
+      // ...
       document: {
         actions: (prev, context) => {
           if (!schemaTypes.includes(context.schemaType)) {
             return prev
           }
 
+          // TODO: Augment 'publish' and 'unpublish' to be disabled if a document IS in Workflow
+          // This would be best done with a listening query here, but we don't have access to documentStore
+
+          // TODO: Performance improvements:
+          // Each of these actions registers their own listener!
+          // One should probably be responsible for listening and storing the response in context
+
           return [
-            (props) => PromoteAction(props, states),
-            (props) => DemoteAction(props, states),
+            (props) => BeginWorkflow(props, states),
+            (props) => AssignWorkflow(props, states),
+            ...states.map(
+              (state) => (props: DocumentActionProps) =>
+                UpdateWorkflow(props, states, state)
+            ),
+            (props) => CompleteWorkflow(props, states),
             ...prev,
           ]
         },
@@ -77,18 +55,20 @@ export const workflow = definePlugin<WorkflowConfig>(
             return prev
           }
 
-          return [(props) => StateBadge(props, states), ...prev]
+          const {documentId, currentUser} = context
+
+          if (!documentId) {
+            return prev
+          }
+
+          return [
+            () => StateBadge(states, documentId),
+            () => AssigneesBadge(states, documentId, currentUser),
+            ...prev,
+          ]
         },
       },
-      tools: [
-        {
-          name: 'workflow',
-          title: 'Workflow',
-          component: WorkflowTool,
-          icon: SplitVerticalIcon,
-          options: {schemaTypes, states},
-        },
-      ],
+      tools: [workflowTool({schemaTypes, states})],
     }
   }
 )
