@@ -1,88 +1,173 @@
 /* eslint-disable react/prop-types */
-import {
-  Box,
-  Button,
-  Card,
-  Flex,
-  Popover,
-  Stack,
-  useClickOutside,
-  useTheme,
-} from '@sanity/ui'
-import {AddIcon, DragHandleIcon} from '@sanity/icons'
-import React, {useState} from 'react'
-import {useSchema, SchemaType} from 'sanity'
-import {UserSelectMenu} from 'sanity-plugin-utils'
+import {useMemo} from 'react'
+import {Box, Card, CardTone, Flex, Stack, useTheme} from '@sanity/ui'
+import {DragHandleIcon} from '@sanity/icons'
+import {useSchema, SchemaType, useValidationStatus} from 'sanity'
 import {Preview} from 'sanity'
 
 import EditButton from './EditButton'
-import {SanityDocumentWithMetadata, User} from '../../types'
-import AvatarGroup from './AvatarGroup'
-import UserAssignment from '../UserAssignment'
+import {SanityDocumentWithMetadata, State, User} from '../../types'
+import UserDisplay from '../UserDisplay'
+import {DraftStatus} from './core/DraftStatus'
+import {PublishedStatus} from './core/PublishedStatus'
+import {ValidationStatus} from './ValidationStatus'
+import CompleteButton from './CompleteButton'
 
 type DocumentCardProps = {
-  userList: User[]
+  isDragDisabled: boolean
+  userRoleCanDrop: boolean
   isDragging: boolean
   item: SanityDocumentWithMetadata
+  states: State[]
+  toggleInvalidDocumentId: (documentId: string, action: 'ADD' | 'REMOVE') => void
+  userList: User[]
 }
 
 export function DocumentCard(props: DocumentCardProps) {
-  const {userList, isDragging, item} = props
+  const {
+    isDragDisabled,
+    userRoleCanDrop,
+    isDragging,
+    item,
+    states,
+    toggleInvalidDocumentId,
+    userList,
+  } = props
   const {assignees = [], documentId} = item._metadata ?? {}
   const schema = useSchema()
 
-  const isDarkMode = useTheme().sanity.color.dark
-  const defaultCardTone = isDarkMode ? 'transparent' : 'default'
+  // Perform document operations after State changes
+  // If State has changed and the document needs to be un/published
+  // This functionality was deemed too dangerous / unexpected
+  // Revisit with improved UX
+  // const currentState = useMemo(
+  //   () => states.find((state) => state.id === item._metadata?.state),
+  //   [states, item]
+  // )
+  // const ops = useDocumentOperation(documentId ?? ``, item._type)
+  // const toast = useToast()
 
-  // Open/close handler
-  // const [popoverRef, setPopoverRef] = useState(null)
-  // const [openId, setOpenId] = useState<string | undefined>(``)
+  // useEffect(() => {
+  //   const isDraft = item._id.startsWith('drafts.')
 
-  // useClickOutside(() => setOpenId(``), [popoverRef])
-
-  // const handleKeyDown = React.useCallback((e) => {
-  //   if (e.key === 'Escape') {
-  //     setOpenId(``)
+  //   if (isDraft && currentState?.operation === 'publish' && !item?._metadata?.optimistic) {
+  //     if (!ops.publish.disabled) {
+  //       ops.publish.execute()
+  //       toast.push({
+  //         title: 'Published Document',
+  //         description: documentId,
+  //         status: 'success',
+  //       })
+  //     }
+  //   } else if (
+  //     !isDraft &&
+  //     currentState?.operation === 'unpublish' &&
+  //     !item?._metadata?.optimistic
+  //   ) {
+  //     if (!ops.unpublish.disabled) {
+  //       ops.unpublish.execute()
+  //       toast.push({
+  //         title: 'Unpublished Document',
+  //         description: documentId,
+  //         status: 'success',
+  //       })
+  //     }
   //   }
-  // }, [])
+  // }, [currentState, documentId, item, ops, toast])
+
+  const isDarkMode = useTheme().sanity.color.dark
+  const defaultCardTone = isDarkMode ? `transparent` : `default`
+  const validation = useValidationStatus(documentId ?? ``, item._type)
+
+  const cardTone = useMemo(() => {
+    let tone: CardTone = defaultCardTone
+
+    if (!userRoleCanDrop) return isDarkMode ? `default` : `transparent`
+    if (!documentId) return tone
+    if (isDragging) tone = `positive`
+
+    if (validation.validation.length > 0) {
+      if (validation.validation.some((v) => v.level === 'error')) {
+        tone = `critical`
+        toggleInvalidDocumentId(documentId, 'ADD')
+      } else {
+        tone = `caution`
+        toggleInvalidDocumentId(documentId, 'REMOVE')
+      }
+    } else {
+      toggleInvalidDocumentId(documentId, 'REMOVE')
+    }
+
+    return tone
+  }, [
+    isDarkMode,
+    userRoleCanDrop,
+    defaultCardTone,
+    documentId,
+    isDragging,
+    toggleInvalidDocumentId,
+    validation,
+  ])
+
+  const hasError = useMemo(
+    () =>
+      validation.isValidating ? false : validation.validation.some((v) => v.level === 'error'),
+    [validation]
+  )
+
+  const isLastState = useMemo(
+    () => states[states.length - 1].id === item._metadata?.state,
+    [states, item._metadata.state]
+  )
 
   return (
-    <Box paddingY={2} paddingX={3}>
-      <Card
-        radius={2}
-        shadow={isDragging ? 3 : 1}
-        tone={isDragging ? 'positive' : defaultCardTone}
-      >
+    <Box paddingBottom={3} paddingX={3}>
+      <Card radius={2} shadow={isDragging ? 3 : 1} tone={cardTone}>
         <Stack>
           <Card
             borderBottom
             radius={2}
             padding={3}
             paddingLeft={2}
-            tone="inherit"
+            tone={cardTone}
             style={{pointerEvents: 'none'}}
           >
             <Flex align="center" justify="space-between" gap={1}>
-              <Preview
-                layout="default"
-                value={item}
-                schemaType={schema.get(item._type) as SchemaType}
-              />
-              <DragHandleIcon style={{flexShrink: 0}} />
+              <Box flex={1}>
+                <Preview
+                  layout="default"
+                  value={item}
+                  schemaType={schema.get(item._type) as SchemaType}
+                />
+              </Box>
+              {/* <Text>{item._metadata.order}</Text> */}
+              <Box style={{flexShrink: 0}}>
+                {hasError || isDragDisabled ? null : <DragHandleIcon />}
+              </Box>
             </Flex>
           </Card>
 
           <Card padding={2} radius={2} tone="inherit">
-            <Flex align="center" justify="space-between" gap={1}>
-              {documentId && (
-                <UserAssignment
-                  userList={userList}
-                  assignees={assignees}
-                  documentId={documentId}
-                />
-              )}
-
-              <EditButton id={item._id} type={item._type} />
+            <Flex align="center" justify="space-between" gap={3}>
+              <Box flex={1}>
+                {documentId && (
+                  <UserDisplay
+                    userList={userList}
+                    assignees={assignees}
+                    documentId={documentId}
+                    disabled={!userRoleCanDrop}
+                  />
+                )}
+              </Box>
+              {validation.validation.length > 0 ? (
+                <ValidationStatus validation={validation.validation} />
+              ) : null}
+              <DraftStatus document={item} />
+              <PublishedStatus document={item} />
+              <EditButton id={item._id} type={item._type} disabled={!userRoleCanDrop} />
+              {isLastState ? (
+                <CompleteButton documentId={documentId} disabled={!userRoleCanDrop} />
+              ) : null}
             </Flex>
           </Card>
         </Stack>

@@ -1,14 +1,10 @@
-import {DocumentBadgeDescription, DocumentBadgeProps} from 'sanity'
+import {DocumentBadgeDescription} from 'sanity'
 import {useWorkflowMetadata} from '../hooks/useWorkflowMetadata'
 
 import {State} from '../types'
 
-export function StateBadge(
-  props: DocumentBadgeProps,
-  states: State[]
-): DocumentBadgeDescription | null {
-  const {id} = props
-  const {data, loading, error} = useWorkflowMetadata(id, states)
+export function StateBadge(states: State[], documentId: string): DocumentBadgeDescription | null {
+  const {data, loading, error} = useWorkflowMetadata(documentId, states)
   const {state} = data
 
   if (loading || error) {
@@ -25,7 +21,7 @@ export function StateBadge(
 
   return {
     label: state.title,
-    title: state.title,
+    // title: state.title,
     color: state?.color,
   }
 }
