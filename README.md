@@ -1,3 +1,11 @@
+> This is a **Sanity Studio v3** plugin.
+
+## Installation
+
+```sh
+npm install sanity-plugin-workflow
+```
+
 # Sanity Workflow Demo Plugin Example
 
 With Sanity Studio you can [customize your content tools to support arbitrary workflows like assignment and content pipelines](https://www.sanity.io/docs/custom-workflows).
