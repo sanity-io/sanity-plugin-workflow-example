@@ -19,6 +19,8 @@ export function CompleteWorkflow(props: DocumentActionProps, states: State[]) {
     client.delete(`workflow-metadata.${id}`)
   }, [id, client])
 
+  const isLastState = data?.state?.id === states[states.length - 1].id
+
   if (!data.metadata) {
     return null
   }
@@ -26,8 +28,11 @@ export function CompleteWorkflow(props: DocumentActionProps, states: State[]) {
   return {
     icon: CheckmarkIcon,
     type: 'dialog',
-    disabled: loading || error,
+    disabled: loading || error || !isLastState,
     label: `Complete Workflow`,
+    title: isLastState
+      ? `Removes the document from the Workflow process`
+      : `Cannot remove from workflow until in the last state`,
     onHandle: () => {
       handle()
     },
