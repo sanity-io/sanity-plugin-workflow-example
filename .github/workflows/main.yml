@@ -16,7 +16,7 @@ on:
   pull_request:
   # Build on commits pushed to branches without a PR if it's in the allowlist
   push:
-    branches: [main]
+    branches: [main, beta]
   # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
   workflow_dispatch:
     inputs:
@@ -117,7 +117,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
         # Re-run semantic release with rich logs if it failed to publish for easier debugging
-      - run: npx semantic-release --dry-run --debug
+      - run: npx semantic-release --debug
         if: failure()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
