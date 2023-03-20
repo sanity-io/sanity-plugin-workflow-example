@@ -2,6 +2,8 @@ import {defineType, defineField} from 'sanity'
 
 import Field from '../../components/DocumentCard/Field'
 import UserAssignmentInput from '../../components/UserAssignmentInput'
+import {API_VERSION} from '../../constants'
+import initialRank from '../../helpers/initialRank'
 import {State} from '../../types'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -39,10 +41,20 @@ export default (states: State[]) =>
         },
       }),
       defineField({
-        name: 'order',
+        name: 'orderRank',
         description: 'Used to maintain order position of cards in the Tool.',
-        type: 'number',
+        type: 'string',
         readOnly: true,
+        initialValue: async (p, {getClient}) => {
+          const lastDocOrderRank = await getClient({
+            apiVersion: API_VERSION,
+          }).fetch(`*[_type == $type]|order(@[$order] desc)[0][$order]`, {
+            order: `orderRank`,
+            type: `workflow.metadata`,
+          })
+
+          return initialRank(lastDocOrderRank)
+        },
       }),
       defineField({
         type: 'array',

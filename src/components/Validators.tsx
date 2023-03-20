@@ -2,9 +2,10 @@ import React from 'react'
 import {useToast, Button} from '@sanity/ui'
 import {useClient} from 'sanity'
 import {UserExtended} from 'sanity-plugin-utils'
+import {LexoRank} from 'lexorank'
 
 import FloatingCard from './FloatingCard'
-import {API_VERSION, ORDER_MIN} from '../constants'
+import {API_VERSION} from '../constants'
 import {SanityDocumentWithMetadata, State} from '../types'
 
 type ValidatorsProps = {
@@ -40,9 +41,9 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
 
   const documentsWithoutOrderIds = data?.length
     ? data.reduce((acc, cur) => {
-        const {documentId, order} = cur._metadata ?? {}
+        const {documentId, orderRank} = cur._metadata ?? {}
 
-        return !order && documentId ? [...acc, documentId] : acc
+        return !orderRank && documentId ? [...acc, documentId] : acc
       }, [] as string[])
     : []
 
@@ -63,7 +64,9 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
       await tx.commit()
 
       toast.push({
-        title: `Corrected ${ids.length === 1 ? `1 Document` : `${ids.length} Documents`}`,
+        title: `Corrected ${
+          ids.length === 1 ? `1 Document` : `${ids.length} Documents`
+        }`,
         status: 'success',
       })
     },
@@ -79,7 +82,8 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
       })
 
       const tx = ids.reduce((item, documentId) => {
-        const {assignees} = data.find((d) => d._id === documentId)?._metadata ?? {}
+        const {assignees} =
+          data.find((d) => d._id === documentId)?._metadata ?? {}
         const validAssignees = assignees?.length
           ? // eslint-disable-next-line max-nested-callbacks
             assignees.filter((a) => userList.find((u) => u.id === a)?.id)
@@ -93,7 +97,9 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
       await tx.commit()
 
       toast.push({
-        title: `Corrected ${ids.length === 1 ? `1 Document` : `${ids.length} Documents`}`,
+        title: `Corrected ${
+          ids.length === 1 ? `1 Document` : `${ids.length} Documents`
+        }`,
         status: 'success',
       })
     },
@@ -108,22 +114,33 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
         status: 'info',
       })
 
-      // TODO: Attempt to use existing document orders
-      const startingValue = ORDER_MIN * 2
-      const tx = ids.reduce((item, documentId, itemIndex) => {
-        return item.patch(`workflow-metadata.${documentId}`, {
-          set: {order: startingValue + itemIndex * 1000},
+      // Get first order value
+      const firstOrder = data[0]?._metadata?.orderRank
+      let newLexo =
+        firstOrder && data.length !== ids.length
+          ? LexoRank.parse(firstOrder)
+          : LexoRank.min()
+
+      const tx = client.transaction()
+
+      for (let index = 0; index < ids.length; index += 1) {
+        newLexo = newLexo.genNext().genNext()
+
+        tx.patch(`workflow-metadata.${ids[index]}`, {
+          set: {orderRank: newLexo.toString()},
         })
-      }, client.transaction())
+      }
 
       await tx.commit()
 
       toast.push({
-        title: `Added order to ${ids.length === 1 ? `1 Document` : `${ids.length} Documents`}`,
+        title: `Added order to ${
+          ids.length === 1 ? `1 Document` : `${ids.length} Documents`
+        }`,
         status: 'success',
       })
     },
-    [client, toast]
+    [data, client, toast]
   )
 
   return (
@@ -163,8 +180,16 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
       ) : null}
       {/* <Button
         tone="caution"
-        onClick={() => addOrderToDocuments(data.map((doc) => String(doc._metadata?.documentId)))}
-        text="Reset order"
+        onClick={() =>
+          addOrderToDocuments(
+            data.map((doc) => String(doc._metadata?.documentId))
+          )
+        }
+        text={
+          data.length === 1
+            ? `Reset Order for 1 Document`
+            : `Reset Order for all ${data.length} Documents`
+        }
       /> */}
     </FloatingCard>
   )

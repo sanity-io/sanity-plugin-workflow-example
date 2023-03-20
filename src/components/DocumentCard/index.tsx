@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import {useMemo} from 'react'
+import {useEffect, useMemo} from 'react'
 import {Box, Card, CardTone, Flex, Stack, useTheme} from '@sanity/ui'
 import {DragHandleIcon} from '@sanity/icons'
 import {useSchema, SchemaType, useValidationStatus} from 'sanity'
@@ -19,7 +19,10 @@ type DocumentCardProps = {
   isDragging: boolean
   item: SanityDocumentWithMetadata
   states: State[]
-  toggleInvalidDocumentId: (documentId: string, action: 'ADD' | 'REMOVE') => void
+  toggleInvalidDocumentId: (
+    documentId: string,
+    action: 'ADD' | 'REMOVE'
+  ) => void
   userList: User[]
 }
 
@@ -77,7 +80,10 @@ export function DocumentCard(props: DocumentCardProps) {
 
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? `transparent` : `default`
-  const validation = useValidationStatus(documentId ?? ``, item._type)
+  const {validation = [], isValidating} = useValidationStatus(
+    documentId ?? ``,
+    item._type
+  )
 
   const cardTone = useMemo(() => {
     let tone: CardTone = defaultCardTone
@@ -86,16 +92,12 @@ export function DocumentCard(props: DocumentCardProps) {
     if (!documentId) return tone
     if (isDragging) tone = `positive`
 
-    if (validation.validation.length > 0) {
-      if (validation.validation.some((v) => v.level === 'error')) {
+    if (!isValidating && validation.length > 0) {
+      if (validation.some((v) => v.level === 'error')) {
         tone = `critical`
-        toggleInvalidDocumentId(documentId, 'ADD')
       } else {
         tone = `caution`
-        toggleInvalidDocumentId(documentId, 'REMOVE')
       }
-    } else {
-      toggleInvalidDocumentId(documentId, 'REMOVE')
     }
 
     return tone
@@ -105,14 +107,27 @@ export function DocumentCard(props: DocumentCardProps) {
     defaultCardTone,
     documentId,
     isDragging,
-    toggleInvalidDocumentId,
     validation,
+    isValidating,
   ])
 
+  // Update validation status
+  // Cannot be done in the above memo because it would set state during render
+  useEffect(() => {
+    if (!isValidating && validation.length > 0) {
+      if (validation.some((v) => v.level === 'error')) {
+        toggleInvalidDocumentId(documentId, 'ADD')
+      } else {
+        toggleInvalidDocumentId(documentId, 'REMOVE')
+      }
+    } else {
+      toggleInvalidDocumentId(documentId, 'REMOVE')
+    }
+  }, [documentId, isValidating, toggleInvalidDocumentId, validation])
+
   const hasError = useMemo(
-    () =>
-      validation.isValidating ? false : validation.validation.some((v) => v.level === 'error'),
-    [validation]
+    () => (isValidating ? false : validation.some((v) => v.level === 'error')),
+    [isValidating, validation]
   )
 
   const isLastState = useMemo(
@@ -140,7 +155,6 @@ export function DocumentCard(props: DocumentCardProps) {
                   schemaType={schema.get(item._type) as SchemaType}
                 />
               </Box>
-              {/* <Text>{item._metadata.order}</Text> */}
               <Box style={{flexShrink: 0}}>
                 {hasError || isDragDisabled ? null : <DragHandleIcon />}
               </Box>
@@ -159,14 +173,21 @@ export function DocumentCard(props: DocumentCardProps) {
                   />
                 )}
               </Box>
-              {validation.validation.length > 0 ? (
-                <ValidationStatus validation={validation.validation} />
+              {validation.length > 0 ? (
+                <ValidationStatus validation={validation} />
               ) : null}
               <DraftStatus document={item} />
               <PublishedStatus document={item} />
-              <EditButton id={item._id} type={item._type} disabled={!userRoleCanDrop} />
+              <EditButton
+                id={item._id}
+                type={item._type}
+                disabled={!userRoleCanDrop}
+              />
               {isLastState ? (
-                <CompleteButton documentId={documentId} disabled={!userRoleCanDrop} />
+                <CompleteButton
+                  documentId={documentId}
+                  disabled={!userRoleCanDrop}
+                />
               ) : null}
             </Flex>
           </Card>

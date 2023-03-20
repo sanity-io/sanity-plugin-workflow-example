@@ -21,9 +21,12 @@ export function useWorkflowMetadata(
     data: metadata,
     loading,
     error,
-  } = useListeningQuery<Metadata>(`*[_type == "workflow.metadata" && documentId == $id][0]`, {
-    params: {id},
-  })
+  } = useListeningQuery<Metadata>(
+    `*[_type == "workflow.metadata" && documentId == $id][0]`,
+    {
+      params: {id},
+    }
+  )
 
   if (metadata?.state) {
     return {

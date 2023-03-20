@@ -1,7 +1,7 @@
 // import {useState} from 'react'
 import {ArrowRightIcon, ArrowLeftIcon} from '@sanity/icons'
 import {useToast} from '@sanity/ui'
-import {useCurrentUser} from 'sanity'
+import {useCurrentUser, useValidationStatus} from 'sanity'
 import {DocumentActionProps, useClient} from 'sanity'
 
 import {useWorkflowMetadata} from '../hooks/useWorkflowMetadata'
@@ -9,8 +9,17 @@ import {API_VERSION} from '../constants'
 import {State} from '../types'
 import {arraysContainMatchingString} from '../helpers/arraysContainMatchingString'
 
-export function UpdateWorkflow(props: DocumentActionProps, allStates: State[], actionState: State) {
-  const {id} = props
+export function UpdateWorkflow(
+  props: DocumentActionProps,
+  allStates: State[],
+  actionState: State
+) {
+  const {id, type} = props
+  const {validation, isValidating} = useValidationStatus(id, type)
+  const hasValidationErrors =
+    !isValidating &&
+    validation?.length > 0 &&
+    validation.find((v) => v.level === 'error')
 
   const user = useCurrentUser()
   const client = useClient({apiVersion: API_VERSION})
@@ -63,7 +72,9 @@ export function UpdateWorkflow(props: DocumentActionProps, allStates: State[], a
     return null
   }
 
-  const currentStateIndex = allStates.findIndex((s) => s.id === currentState?.id)
+  const currentStateIndex = allStates.findIndex(
+    (s) => s.id === currentState?.id
+  )
   const actionStateIndex = allStates.findIndex((s) => s.id === actionState.id)
   const direction = actionStateIndex > currentStateIndex ? 'promote' : 'demote'
   const DirectionIcon = direction === 'promote' ? ArrowRightIcon : ArrowLeftIcon
@@ -109,11 +120,17 @@ export function UpdateWorkflow(props: DocumentActionProps, allStates: State[], a
     title = `You must be assigned to the document to ${directionLabel} State to "${actionState.title}"`
   }
 
+  if (hasValidationErrors) {
+    title = `Document has validation errors, cannot ${directionLabel} State to "${actionState.title}"`
+  }
+
   return {
     icon: DirectionIcon,
     disabled:
       loading ||
       error ||
+      isValidating ||
+      hasValidationErrors ||
       !currentState ||
       !userRoleCanUpdateState ||
       !actionStateIsAValidTransition ||

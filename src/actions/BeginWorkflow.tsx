@@ -1,11 +1,12 @@
 import {useCallback, useState} from 'react'
 import {SplitVerticalIcon} from '@sanity/icons'
 import {DocumentActionProps, useClient} from 'sanity'
+import {useToast} from '@sanity/ui'
+import {LexoRank} from 'lexorank'
 
-import {API_VERSION, ORDER_MIN} from '../constants'
+import {API_VERSION} from '../constants'
 import {useWorkflowMetadata} from '../hooks/useWorkflowMetadata'
 import {State} from '../types'
-import {useToast} from '@sanity/ui'
 
 export function BeginWorkflow(props: DocumentActionProps, states: State[]) {
   const {id, draft} = props
@@ -22,7 +23,7 @@ export function BeginWorkflow(props: DocumentActionProps, states: State[]) {
   const handle = useCallback(async () => {
     setBeginning(true)
     const lowestOrderFirstState = await client.fetch(
-      `*[_type == "workflow.metadata" && state == $state]|order(order)[0].order`,
+      `*[_type == "workflow.metadata" && state == $state]|order(orderRank)[0].orderRank`,
       {state: states[0].id}
     )
     client
@@ -32,8 +33,9 @@ export function BeginWorkflow(props: DocumentActionProps, states: State[]) {
           _type: `workflow.metadata`,
           documentId: id,
           state: states[0].id,
-          // TODO: Fix naive ordering
-          lowestOrderFirstState: lowestOrderFirstState ? lowestOrderFirstState - 500 : ORDER_MIN,
+          orderRank: lowestOrderFirstState
+            ? LexoRank.parse(lowestOrderFirstState).genNext().toString()
+            : LexoRank.min().toString(),
         },
         // Faster!
         {visibility: 'async'}
