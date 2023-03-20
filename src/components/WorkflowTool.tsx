@@ -13,13 +13,14 @@ import {
 import {State, WorkflowConfig} from '../types'
 import {DocumentCard} from './DocumentCard'
 import {useWorkflowDocuments} from '../hooks/useWorkflowDocuments'
-import {API_VERSION, ORDER_MAX, ORDER_MIN} from '../constants'
+import {API_VERSION} from '../constants'
 
 import Validators from './Validators'
 import Filters from './Filters'
 import {filterItemsAndSort} from '../helpers/filterItemsAndSort'
 import {arraysContainMatchingString} from '../helpers/arraysContainMatchingString'
 import StateTitle from './StateTitle'
+import {LexoRank} from 'lexorank'
 
 type WorkflowToolProps = {
   tool: Tool<WorkflowConfig>
@@ -126,36 +127,45 @@ export default function WorkflowTool(props: WorkflowToolProps) {
 
       // Find all items in current state
       const destinationStateItems = [
-        ...filterItemsAndSort(data, destination.droppableId, [], []),
+        ...filterItemsAndSort(data, destination.droppableId, [], null),
       ]
 
-      // TODO: This ordering logic is naive, and could be improved
-      let newOrder = ORDER_MIN
+      let newOrder
 
       if (!destinationStateItems.length) {
         // Only item in state
-        newOrder = ORDER_MIN
+        // New minimum rank
+        newOrder = LexoRank.min().toString()
       } else if (destination.index === 0) {
         // Now first item in order
-        const firstItem = [...destinationStateItems].shift()
-        newOrder = firstItem?._metadata?.order
-          ? firstItem?._metadata?.order - ORDER_MIN / 2
-          : ORDER_MIN
-      } else if (destination.index === destinationStateItems.length) {
+        const firstItemOrderRank = [...destinationStateItems].shift()?._metadata
+          ?.orderRank
+        newOrder =
+          firstItemOrderRank && typeof firstItemOrderRank === 'string'
+            ? LexoRank.parse(firstItemOrderRank).genPrev().toString()
+            : LexoRank.min().toString()
+      } else if (destination.index + 1 === destinationStateItems.length) {
         // Now last item in order
-        const lastItem = [...destinationStateItems].pop()
-        newOrder = lastItem?._metadata?.order
-          ? lastItem?._metadata?.order + ORDER_MAX / 2
-          : ORDER_MAX
+        const lastItemOrderRank = [...destinationStateItems].pop()?._metadata
+          ?.orderRank
+        newOrder =
+          lastItemOrderRank && typeof lastItemOrderRank === 'string'
+            ? LexoRank.parse(lastItemOrderRank).genNext().toString()
+            : LexoRank.min().toString()
       } else {
         // Must be between two items
-        const itemBefore = destinationStateItems[destination.index - 1]
-        const itemAfter = destinationStateItems[destination.index]
+        const itemBefore = destinationStateItems[destination.index]
+        const itemBeforeRank = itemBefore?._metadata?.orderRank
+        const itemBeforeRankParsed = itemBefore._metadata.orderRank
+          ? LexoRank.parse(itemBeforeRank)
+          : LexoRank.min()
+        const itemAfter = destinationStateItems[destination.index + 1]
+        const itemAfterRank = itemAfter?._metadata?.orderRank
+        const itemAfterRankParsed = itemAfter._metadata.orderRank
+          ? LexoRank.parse(itemAfterRank)
+          : LexoRank.max()
 
-        newOrder =
-          ((itemBefore?._metadata?.order ?? ORDER_MIN) +
-            (itemAfter?._metadata?.order ?? ORDER_MAX)) /
-          2
+        newOrder = itemBeforeRankParsed.between(itemAfterRankParsed).toString()
       }
 
       move(draggableId, destination, states, newOrder)

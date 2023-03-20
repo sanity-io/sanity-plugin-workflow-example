@@ -48,7 +48,7 @@ export default function Filters(props: FiltersProps) {
 
   const onClear = useCallback(() => {
     resetSelectedUsers()
-  }, [selectedUserIds, toggleSelectedUser])
+  }, [resetSelectedUsers])
 
   if (uniqueAssignedUsers.length === 0 && schemaTypes.length < 2) {
     return null
@@ -65,12 +65,18 @@ export default function Filters(props: FiltersProps) {
       <Flex align="center">
         <Flex align="center" gap={1} flex={1}>
           {uniqueAssignedUsers.length > 5 ? (
-            <MenuButton
-              button={<Button text="Filter Assignees" icon={UserIcon} />}
-              id="user-filters"
-              menu={
-                <Menu>
-                  <Card tone="default">
+            <Card tone="default">
+              <MenuButton
+                button={
+                  <Button
+                    text="Filter Assignees"
+                    tone="primary"
+                    icon={UserIcon}
+                  />
+                }
+                id="user-filters"
+                menu={
+                  <Menu>
                     <UserSelectMenu
                       value={selectedUserIds}
                       userList={uniqueAssignedUsers}
@@ -83,11 +89,11 @@ export default function Filters(props: FiltersProps) {
                         clear: 'Clear filters',
                       }}
                     />
-                  </Card>
-                </Menu>
-              }
-              popover={{portal: true}}
-            />
+                  </Menu>
+                }
+                popover={{portal: true}}
+              />
+            </Card>
           ) : (
             <>
               {meInUniqueAssignees ? (

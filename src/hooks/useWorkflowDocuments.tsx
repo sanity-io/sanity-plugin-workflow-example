@@ -8,13 +8,13 @@ import groq from 'groq'
 import {SanityDocumentWithMetadata, State} from '../types'
 import {API_VERSION} from '../constants'
 
-const QUERY = groq`*[_type == "workflow.metadata"]{
+const QUERY = groq`*[_type == "workflow.metadata"]|order(orderRank){
   "_metadata": {
     _rev,
     assignees,
     documentId,
     state,
-    order
+    orderRank
   },
   ...(
     *[_id in [^.documentId, "drafts." + ^.documentId]]|order(_updatedAt)[0]{ 
@@ -24,7 +24,7 @@ const QUERY = groq`*[_type == "workflow.metadata"]{
       _updatedAt 
     }
   )
-}`
+}[defined(_id)]`
 
 type WorkflowDocuments = {
   workflowData: {
@@ -37,7 +37,7 @@ type WorkflowDocuments = {
       draggedId: string,
       destination: DraggableLocation,
       states: State[],
-      newOrder: number
+      newOrder: string
     ) => void
   }
 }
@@ -47,12 +47,16 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
   const client = useClient({apiVersion: API_VERSION})
 
   // Get and listen to changes on documents + workflow metadata documents
-  const {data, loading, error} = useListeningQuery<SanityDocumentWithMetadata[]>(QUERY, {
+  const {data, loading, error} = useListeningQuery<
+    SanityDocumentWithMetadata[]
+  >(QUERY, {
     params: {schemaTypes},
     initialValue: [],
   })
 
-  const [localDocuments, setLocalDocuments] = React.useState<SanityDocumentWithMetadata[]>([])
+  const [localDocuments, setLocalDocuments] = React.useState<
+    SanityDocumentWithMetadata[]
+  >([])
 
   React.useEffect(() => {
     if (data) {
@@ -61,7 +65,12 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
   }, [data])
 
   const move = React.useCallback(
-    (draggedId: string, destination: DraggableLocation, states: State[], newOrder: number) => {
+    (
+      draggedId: string,
+      destination: DraggableLocation,
+      states: State[],
+      newOrder: string
+    ) => {
       // Optimistic update
       const currentLocalData = localDocuments
       const newLocalDocuments = localDocuments.map((item) => {
@@ -71,8 +80,8 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
             _metadata: {
               ...item._metadata,
               state: destination.droppableId,
-              order: newOrder,
-              // This never should be written to the document
+              orderRank: newOrder,
+              // This value won't be written to the document
               // It's done so that un/publish operations don't happen twice
               // Because a moved document's card will update once optimistically
               // and then again when the document is updated
@@ -89,7 +98,9 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
       // Now client-side update
       const newStateId = destination.droppableId
       const newState = states.find((s) => s.id === newStateId)
-      const document = localDocuments.find((d) => d?._metadata?.documentId === draggedId)
+      const document = localDocuments.find(
+        (d) => d?._metadata?.documentId === draggedId
+      )
 
       if (!newState?.id) {
         toast.push({
@@ -116,12 +127,11 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
       client
         .patch(`workflow-metadata.${documentId}`)
         .ifRevisionId(_rev as string)
-        .set({state: newStateId, order: newOrder})
+        .set({state: newStateId, orderRank: newOrder})
         .commit()
         .then(() => {
           return toast.push({
             title: `Moved to "${newState?.title ?? newStateId}"`,
-            description: documentId,
             status: 'success',
           })
         })
@@ -131,7 +141,6 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
 
           return toast.push({
             title: `Failed to move to "${newState?.title ?? newStateId}"`,
-            description: documentId,
             status: 'error',
           })
         })
@@ -139,7 +148,7 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
       // Send back to the workflow board so a document update can happen
       return {_id, _type, documentId, state: newState as State}
     },
-    [client, toast, localDocuments, data]
+    [client, toast, localDocuments]
   )
 
   return {

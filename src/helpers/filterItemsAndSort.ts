@@ -4,7 +4,7 @@ export function filterItemsAndSort(
   items: SanityDocumentWithMetadata[],
   stateId: string,
   selectedUsers: string[] = [],
-  selectedSchemaTypes: string[] = []
+  selectedSchemaTypes: null | string[] = []
 ): SanityDocumentWithMetadata[] {
   return (
     items
@@ -19,17 +19,21 @@ export function filterItemsAndSort(
           : !selectedUsers.length
       )
       // Only items of selected schema types, if any are selected
-      .filter((item) =>
-        selectedSchemaTypes.length
+      .filter((item) => {
+        if (!selectedSchemaTypes) {
+          return true
+        }
+
+        return selectedSchemaTypes.length
           ? selectedSchemaTypes.includes(item._type)
           : false
-      )
-      // Sort by metadata order
+      })
+      // Sort by metadata orderRank, a string field
       .sort((a, b) => {
-        const aOrder = a?._metadata?.order ?? 0
-        const bOrder = b?._metadata?.order ?? 0
+        const aOrderRank = a._metadata?.orderRank || '0'
+        const bOrderRank = b._metadata?.orderRank || '0'
 
-        return aOrder - bOrder
+        return aOrderRank.localeCompare(bOrderRank)
       })
   )
 }
