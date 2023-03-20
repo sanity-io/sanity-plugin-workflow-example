@@ -22,7 +22,7 @@ export function filterItemsAndSort(
       .filter((item) =>
         selectedSchemaTypes.length
           ? selectedSchemaTypes.includes(item._type)
-          : true
+          : false
       )
       // Sort by metadata order
       .sort((a, b) => {

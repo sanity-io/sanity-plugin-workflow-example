@@ -2,7 +2,13 @@ import React from 'react'
 import {Flex, Card, Grid, Spinner, Container, useTheme} from '@sanity/ui'
 import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
 import {Tool, useCurrentUser} from 'sanity'
-import {DragDropContext, Droppable, Draggable, DropResult, DragStart} from 'react-beautiful-dnd'
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+  DragStart,
+} from 'react-beautiful-dnd'
 
 import {State, WorkflowConfig} from '../types'
 import {DocumentCard} from './DocumentCard'
@@ -28,7 +34,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   const userList = useProjectUsers({apiVersion: API_VERSION})
 
   const user = useCurrentUser()
-  const userRoleNames = user?.roles?.length ? user?.roles.map((r) => r.name) : []
+  const userRoleNames = user?.roles?.length
+    ? user?.roles.map((r) => r.name)
+    : []
 
   const {workflowData, operations} = useWorkflowDocuments(schemaTypes)
 
@@ -51,7 +59,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       const {droppableId: currentStateId} = source
       setDraggingFrom(currentStateId)
 
-      const document = data.find((item) => item._metadata?.documentId === draggableId)
+      const document = data.find(
+        (item) => item._metadata?.documentId === draggableId
+      )
       const state = states.find((s) => s.id === currentStateId)
 
       // This shouldn't happen but TypeScript
@@ -64,7 +74,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
 
       if (statesThatRequireAssignmentIds.length) {
         const documentAssignees = document._metadata?.assignees ?? []
-        const userIsAssignedToDocument = user?.id ? documentAssignees.includes(user.id) : false
+        const userIsAssignedToDocument = user?.id
+          ? documentAssignees.includes(user.id)
+          : false
 
         if (!userIsAssignedToDocument) {
           undroppableStateIds.push(...statesThatRequireAssignmentIds)
@@ -73,7 +85,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
 
       const statesThatCannotBeTransitionedToIds =
         state.transitions && state.transitions.length
-          ? states.filter((s) => !state.transitions?.includes(s.id)).map((s) => s.id)
+          ? states
+              .filter((s) => !state.transitions?.includes(s.id))
+              .map((s) => s.id)
           : []
 
       if (statesThatCannotBeTransitionedToIds.length) {
@@ -81,7 +95,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       }
 
       // Remove currentStateId from undroppableStates
-      const undroppableExceptSelf = undroppableStateIds.filter((id) => id !== currentStateId)
+      const undroppableExceptSelf = undroppableStateIds.filter(
+        (id) => id !== currentStateId
+      )
 
       if (undroppableExceptSelf.length) {
         setUndroppableStates(undroppableExceptSelf)
@@ -102,13 +118,16 @@ export default function WorkflowTool(props: WorkflowToolProps) {
         // No destination?
         !destination ||
         // No change in position?
-        (destination.droppableId === source.droppableId && destination.index === source.index)
+        (destination.droppableId === source.droppableId &&
+          destination.index === source.index)
       ) {
         return
       }
 
       // Find all items in current state
-      const destinationStateItems = [...filterItemsAndSort(data, destination.droppableId, [], [])]
+      const destinationStateItems = [
+        ...filterItemsAndSort(data, destination.droppableId, [], []),
+      ]
 
       // TODO: This ordering logic is naive, and could be improved
       let newOrder = ORDER_MIN
@@ -146,8 +165,11 @@ export default function WorkflowTool(props: WorkflowToolProps) {
 
   const uniqueAssignedUsers = React.useMemo(() => {
     const uniqueUserIds = data.reduce((acc, item) => {
-      const {assignees} = item._metadata ?? {}
-      return assignees?.length ? Array.from(new Set([...acc, ...assignees])) : acc
+      const {assignees = []} = item._metadata ?? {}
+      const newAssignees = assignees?.length
+        ? assignees.filter((a) => !acc.includes(a))
+        : []
+      return newAssignees.length ? [...acc, ...newAssignees] : acc
     }, [] as string[])
 
     return userList.filter((u) => uniqueUserIds.includes(u.id))
@@ -158,26 +180,36 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   )
   const toggleSelectedUser = React.useCallback((userId: string) => {
     setSelectedUserIds((prev) =>
-      prev.includes(userId) ? prev.filter((u) => u !== userId) : [...prev, userId]
+      prev.includes(userId)
+        ? prev.filter((u) => u !== userId)
+        : [...prev, userId]
     )
   }, [])
   const resetSelectedUsers = React.useCallback(() => {
     setSelectedUserIds([])
   }, [])
 
-  const [selectedSchemaTypes, setSelectedSchemaTypes] = React.useState<string[]>(schemaTypes)
+  const [selectedSchemaTypes, setSelectedSchemaTypes] =
+    React.useState<string[]>(schemaTypes)
   const toggleSelectedSchemaType = React.useCallback((schemaType: string) => {
     setSelectedSchemaTypes((prev) =>
-      prev.includes(schemaType) ? prev.filter((u) => u !== schemaType) : [...prev, schemaType]
+      prev.includes(schemaType)
+        ? prev.filter((u) => u !== schemaType)
+        : [...prev, schemaType]
     )
   }, [])
 
-  const [invalidDocumentIds, setInvalidDocumentIds] = React.useState<string[]>([])
-  const toggleInvalidDocumentId = React.useCallback((docId: string, action: 'ADD' | 'REMOVE') => {
-    setInvalidDocumentIds((prev) =>
-      action === 'ADD' ? [...prev, docId] : prev.filter((id) => id !== docId)
-    )
-  }, [])
+  const [invalidDocumentIds, setInvalidDocumentIds] = React.useState<string[]>(
+    []
+  )
+  const toggleInvalidDocumentId = React.useCallback(
+    (docId: string, action: 'ADD' | 'REMOVE') => {
+      setInvalidDocumentIds((prev) =>
+        action === 'ADD' ? [...prev, docId] : prev.filter((id) => id !== docId)
+      )
+    },
+    []
+  )
 
   if (!states?.length) {
     return (
@@ -194,7 +226,10 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   if (error && !data.length) {
     return (
       <Container width={1} padding={5}>
-        <Feedback tone="critical" title="Error querying for Workflow documents" />
+        <Feedback
+          tone="critical"
+          title="Error querying for Workflow documents"
+        />
       </Container>
     )
   }
@@ -217,7 +252,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
             const userRoleCanDrop = state?.roles?.length
               ? arraysContainMatchingString(state.roles, userRoleNames)
               : true
-            const isDropDisabled = !userRoleCanDrop || undroppableStates.includes(state.id)
+            const isDropDisabled =
+              !userRoleCanDrop || undroppableStates.includes(state.id)
 
             return (
               <Card
@@ -235,11 +271,16 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                   isDropDisabled={isDropDisabled}
                   draggingFrom={draggingFrom}
                 />
-                <Droppable droppableId={state.id} isDropDisabled={isDropDisabled}>
+                <Droppable
+                  droppableId={state.id}
+                  isDropDisabled={isDropDisabled}
+                >
                   {(provided, snapshot) => (
                     <Card
                       ref={provided.innerRef}
-                      tone={snapshot.isDraggingOver ? `primary` : defaultCardTone}
+                      tone={
+                        snapshot.isDraggingOver ? `primary` : defaultCardTone
+                      }
                       height="fill"
                       paddingTop={1}
                     >
@@ -293,7 +334,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                                     isDragDisabled={isDragDisabled}
                                     isDragging={draggableSnapshot.isDragging}
                                     item={item}
-                                    toggleInvalidDocumentId={toggleInvalidDocumentId}
+                                    toggleInvalidDocumentId={
+                                      toggleInvalidDocumentId
+                                    }
                                     userList={userList}
                                     states={states}
                                   />
