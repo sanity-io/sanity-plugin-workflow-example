@@ -5,6 +5,18 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.3](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2023-03-20)
+
+### Features
+
+- add lexorank ordering ([39bdd94](https://github.com/sanity-io/sanity-plugin-workflow/commit/39bdd944552097a3b31782e23b0553a9ab31bb5a))
+- add searchable user filter ([6d39404](https://github.com/sanity-io/sanity-plugin-workflow/commit/6d3940495ff40e70c952daf3f680a773e2606970))
+
+### Bug Fixes
+
+- document actions logic ([986cee6](https://github.com/sanity-io/sanity-plugin-workflow/commit/986cee6d0f12b2b7e7e076fe44bca789277f5f8e))
+- remove yarn lock ([c2134b3](https://github.com/sanity-io/sanity-plugin-workflow/commit/c2134b3bc031546ac85c0d9d20f4cfedb8863c48))
+
 ## [1.0.0-beta.2](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2023-02-24)
 
 ### Features
