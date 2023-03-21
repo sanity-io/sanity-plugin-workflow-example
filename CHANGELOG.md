@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.4](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2023-03-21)
+
+### Features
+
+- add orphan metadata removal ([9e3adb0](https://github.com/sanity-io/sanity-plugin-workflow/commit/9e3adb09f9088299362b7a3f8594e7089d2ae193))
+- virtualised lists ([9c8d1bd](https://github.com/sanity-io/sanity-plugin-workflow/commit/9c8d1bd10022cdd933b4c1fba88b3580e2e7e132))
+
 ## [1.0.0-beta.3](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2023-03-20)
 
 ### Features
