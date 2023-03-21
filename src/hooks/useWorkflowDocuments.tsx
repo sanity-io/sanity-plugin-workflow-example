@@ -1,12 +1,12 @@
-import React from 'react'
-import {useListeningQuery} from 'sanity-plugin-utils'
+import {DraggableLocation} from '@hello-pangea/dnd'
 import {useToast} from '@sanity/ui'
-import {useClient} from 'sanity'
-import {DraggableLocation} from 'react-beautiful-dnd'
 import groq from 'groq'
+import React from 'react'
+import {useClient} from 'sanity'
+import {useListeningQuery} from 'sanity-plugin-utils'
 
-import {SanityDocumentWithMetadata, State} from '../types'
 import {API_VERSION} from '../constants'
+import {SanityDocumentWithMetadata, State} from '../types'
 
 const QUERY = groq`*[_type == "workflow.metadata"]|order(orderRank){
   "_metadata": {
@@ -24,7 +24,7 @@ const QUERY = groq`*[_type == "workflow.metadata"]|order(orderRank){
       _updatedAt 
     }
   )
-}[defined(_id)]`
+}`
 
 type WorkflowDocuments = {
   workflowData: {

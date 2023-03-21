@@ -1,17 +1,17 @@
 /* eslint-disable react/prop-types */
-import {useEffect, useMemo} from 'react'
-import {Box, Card, CardTone, Flex, Stack, useTheme} from '@sanity/ui'
 import {DragHandleIcon} from '@sanity/icons'
-import {useSchema, SchemaType, useValidationStatus} from 'sanity'
+import {Box, Card, CardTone, Flex, Stack, useTheme} from '@sanity/ui'
+import {useEffect, useMemo} from 'react'
+import {SchemaType, useSchema, useValidationStatus} from 'sanity'
 import {Preview} from 'sanity'
 
-import EditButton from './EditButton'
 import {SanityDocumentWithMetadata, State, User} from '../../types'
 import UserDisplay from '../UserDisplay'
+import CompleteButton from './CompleteButton'
 import {DraftStatus} from './core/DraftStatus'
 import {PublishedStatus} from './core/PublishedStatus'
+import EditButton from './EditButton'
 import {ValidationStatus} from './ValidationStatus'
-import CompleteButton from './CompleteButton'
 
 type DocumentCardProps = {
   isDragDisabled: boolean

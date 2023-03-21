@@ -8,6 +8,8 @@ export function filterItemsAndSort(
 ): SanityDocumentWithMetadata[] {
   return (
     items
+      // Only items that have existing documents
+      .filter((item) => item?._id)
       // Only items of this state
       .filter((item) => item?._metadata?.state === stateId)
       // Only items with selected users, if the document has any assigned users

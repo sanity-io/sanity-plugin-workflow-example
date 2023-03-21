@@ -1,8 +1,8 @@
-import {MenuButton, Menu, Flex, Card, Button} from '@sanity/ui'
-import {useCurrentUser, UserAvatar, useSchema} from 'sanity'
-import {UserIcon, ResetIcon} from '@sanity/icons'
-import {UserExtended, UserSelectMenu} from 'sanity-plugin-utils'
+import {ResetIcon, UserIcon} from '@sanity/icons'
+import {Button, Card, Flex, Menu, MenuButton} from '@sanity/ui'
 import {useCallback} from 'react'
+import {useCurrentUser, UserAvatar, useSchema} from 'sanity'
+import {UserExtended, UserSelectMenu} from 'sanity-plugin-utils'
 
 type FiltersProps = {
   uniqueAssignedUsers: UserExtended[]

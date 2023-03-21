@@ -12,6 +12,8 @@ With Sanity Studio you can [customize your content tools to support arbitrary wo
 
 This plugin is distributed as a **reference implementation** of these customization APIs and is not considered to be a feature-complete implementation of what workflow management requires in production. It is a starting point intended to be forked and customized to the needs of your organization and content creators.
 
+![Screenshot 2023-03-21 at 12 11 24](https://user-images.githubusercontent.com/9684022/226602179-5bd3d91a-9c27-431e-be18-3c70f06c6ccb.png)
+
 ## Features
 
 This work demonstrates how a single plugin can define:

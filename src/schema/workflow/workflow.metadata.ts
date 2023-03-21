@@ -1,4 +1,4 @@
-import {defineType, defineField} from 'sanity'
+import {defineField, defineType} from 'sanity'
 
 import Field from '../../components/DocumentCard/Field'
 import UserAssignmentInput from '../../components/UserAssignmentInput'

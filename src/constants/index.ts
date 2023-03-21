@@ -1,4 +1,4 @@
-import {WorkflowConfig, defineStates} from '../types'
+import {defineStates, WorkflowConfig} from '../types'
 
 export const API_VERSION = `2023-01-01`
 

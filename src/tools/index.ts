@@ -1,5 +1,5 @@
-import {Tool} from 'sanity'
 import {SplitVerticalIcon} from '@sanity/icons'
+import {Tool} from 'sanity'
 
 import WorkflowTool from '../components/WorkflowTool'
 import {WorkflowConfig} from '../types'
