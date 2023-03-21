@@ -1,15 +1,15 @@
 import {definePlugin, DocumentActionProps} from 'sanity'
 
-import {DEFAULT_CONFIG} from './constants'
-import {WorkflowConfig} from './types'
-import {workflowTool} from './tools'
-import metadata from './schema/workflow/workflow.metadata'
 import {AssignWorkflow} from './actions/AssignWorkflow'
 import {BeginWorkflow} from './actions/BeginWorkflow'
 import {CompleteWorkflow} from './actions/CompleteWorkflow'
+import {UpdateWorkflow} from './actions/UpdateWorkflow'
 import {AssigneesBadge} from './badges/AssigneesBadge'
 import {StateBadge} from './badges/StateBadge'
-import {UpdateWorkflow} from './actions/UpdateWorkflow'
+import {DEFAULT_CONFIG} from './constants'
+import metadata from './schema/workflow/workflow.metadata'
+import {workflowTool} from './tools'
+import {WorkflowConfig} from './types'
 
 export const workflow = definePlugin<WorkflowConfig>(
   (config = DEFAULT_CONFIG) => {

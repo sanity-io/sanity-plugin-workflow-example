@@ -1,26 +1,25 @@
-import React from 'react'
-import {Flex, Card, Grid, Spinner, Container, useTheme} from '@sanity/ui'
-import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
-import {Tool, useCurrentUser} from 'sanity'
 import {
   DragDropContext,
-  Droppable,
   Draggable,
-  DropResult,
   DragStart,
-} from 'react-beautiful-dnd'
+  Droppable,
+  DropResult,
+} from '@hello-pangea/dnd'
+import {Card, Container, Flex, Grid, Spinner, useTheme} from '@sanity/ui'
+import {LexoRank} from 'lexorank'
+import React from 'react'
+import {Tool, useCurrentUser} from 'sanity'
+import {Feedback, useProjectUsers} from 'sanity-plugin-utils'
 
+import {API_VERSION} from '../constants'
+import {arraysContainMatchingString} from '../helpers/arraysContainMatchingString'
+import {filterItemsAndSort} from '../helpers/filterItemsAndSort'
+import {useWorkflowDocuments} from '../hooks/useWorkflowDocuments'
 import {State, WorkflowConfig} from '../types'
 import {DocumentCard} from './DocumentCard'
-import {useWorkflowDocuments} from '../hooks/useWorkflowDocuments'
-import {API_VERSION} from '../constants'
-
-import Validators from './Validators'
 import Filters from './Filters'
-import {filterItemsAndSort} from '../helpers/filterItemsAndSort'
-import {arraysContainMatchingString} from '../helpers/arraysContainMatchingString'
 import StateTitle from './StateTitle'
-import {LexoRank} from 'lexorank'
+import Validators from './Validators'
 
 type WorkflowToolProps = {
   tool: Tool<WorkflowConfig>
