@@ -146,9 +146,28 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
   // A document could be deleted and the workflow metadata left behind
   const orphanedMetadataDocumentIds = React.useMemo(() => {
     return data.length
-      ? data.filter((doc) => !doc?._id).map((doc) => doc._metadata._id)
+      ? data.filter((doc) => !doc?._id).map((doc) => doc._metadata.documentId)
       : []
   }, [data])
+
+  const handleOrphans = React.useCallback(() => {
+    toast.push({
+      title: 'Removing orphaned metadata...',
+      status: 'info',
+    })
+
+    const tx = client.transaction()
+    orphanedMetadataDocumentIds.forEach((id) => {
+      tx.delete(`workflow-metadata.${id}`)
+    })
+
+    tx.commit()
+
+    toast.push({
+      title: `Removed ${orphanedMetadataDocumentIds.length} orphaned metadata documents`,
+      status: 'success',
+    })
+  }, [client, orphanedMetadataDocumentIds, toast])
 
   return (
     <FloatingCard>
@@ -186,7 +205,11 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
         />
       ) : null}
       {orphanedMetadataDocumentIds.length > 0 ? (
-        <Button text="TODO: Cleanup orphaned metadata" disabled />
+        <Button
+          text="Cleanup orphaned metadata"
+          onClick={handleOrphans}
+          tone="caution"
+        />
       ) : null}
       {/* <Button
         tone="caution"
