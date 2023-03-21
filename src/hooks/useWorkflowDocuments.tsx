@@ -24,9 +24,7 @@ const QUERY = groq`*[_type == "workflow.metadata"]|order(orderRank){
       _updatedAt 
     }
   )
-}[defined(_id)]`
-// @TODO ^ Need a cleanup action somewhere
-// It's possible to leave a workflow document around that has no matching document
+}`
 
 type WorkflowDocuments = {
   workflowData: {

@@ -1,12 +1,12 @@
+import {Button, useToast} from '@sanity/ui'
+import {LexoRank} from 'lexorank'
 import React from 'react'
-import {useToast, Button} from '@sanity/ui'
 import {useClient} from 'sanity'
 import {UserExtended} from 'sanity-plugin-utils'
-import {LexoRank} from 'lexorank'
 
-import FloatingCard from './FloatingCard'
 import {API_VERSION} from '../constants'
 import {SanityDocumentWithMetadata, State} from '../types'
+import FloatingCard from './FloatingCard'
 
 type ValidatorsProps = {
   data: SanityDocumentWithMetadata[]
@@ -143,6 +143,13 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
     [data, client, toast]
   )
 
+  // A document could be deleted and the workflow metadata left behind
+  const orphanedMetadataDocumentIds = React.useMemo(() => {
+    return data.length
+      ? data.filter((doc) => !doc?._id).map((doc) => doc._metadata._id)
+      : []
+  }, [data])
+
   return (
     <FloatingCard>
       {documentsWithoutValidMetadataIds.length > 0 ? (
@@ -177,6 +184,9 @@ export default function Validators({data, userList, states}: ValidatorsProps) {
               : `Set Order for ${documentsWithoutOrderIds.length} Documents`
           }
         />
+      ) : null}
+      {orphanedMetadataDocumentIds.length > 0 ? (
+        <Button text="TODO: Cleanup orphaned metadata" disabled />
       ) : null}
       {/* <Button
         tone="caution"
