@@ -5,6 +5,16 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.5](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2023-03-29)
+
+### Features
+
+- requireValidation option for performance ([f676dc9](https://github.com/sanity-io/sanity-plugin-workflow/commit/f676dc9f85d92c7ca7e17de50b48f3a97482bf74))
+
+### Bug Fixes
+
+- ordering error bug ([90a331a](https://github.com/sanity-io/sanity-plugin-workflow/commit/90a331a580c5f40a0aa9b7bfa4868ba0393a3ccb))
+
 ## [1.0.0-beta.4](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2023-03-21)
 
 ### Features
