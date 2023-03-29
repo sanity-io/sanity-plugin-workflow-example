@@ -71,10 +71,13 @@ Documents can be promoted and demoted in the Workflow with the provided Document
     // Optional settings:
     // Used for the color of the Document Badge
     color: 'success',
-    // Will enable document actions and drag-and-drop for only users with these Role
+    // Will limit document actions and drag-and-drop for only users with these Role
     roles: ['publisher', 'administrator'],
     // Requires the user to be "assigned" in order to update to this State
     requireAssignment: true,
+    // Requires the document to be valid before being promoted out of this State
+    // Warning: With many documents in the Kanban view this can negatively impact performance 
+    requireValidation: true,
     // Defines which States a document can be moved to from this one
     transitions: ['changesRequested', 'approved']
 }

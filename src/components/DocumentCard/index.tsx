@@ -1,8 +1,12 @@
 /* eslint-disable react/prop-types */
 import {DragHandleIcon} from '@sanity/icons'
 import {Box, Card, CardTone, Flex, Stack, useTheme} from '@sanity/ui'
-import {useEffect, useMemo} from 'react'
-import {SchemaType, useSchema, useValidationStatus} from 'sanity'
+import {useCallback, useEffect, useMemo, useState} from 'react'
+import {
+  SchemaType,
+  useSchema,
+  ValidationStatus as ValidationStatusType,
+} from 'sanity'
 import {Preview} from 'sanity'
 
 import {SanityDocumentWithMetadata, State, User} from '../../types'
@@ -11,6 +15,7 @@ import CompleteButton from './CompleteButton'
 import {DraftStatus} from './core/DraftStatus'
 import {PublishedStatus} from './core/PublishedStatus'
 import EditButton from './EditButton'
+import Validate from './Validate'
 import {ValidationStatus} from './ValidationStatus'
 
 type DocumentCardProps = {
@@ -38,6 +43,7 @@ export function DocumentCard(props: DocumentCardProps) {
   } = props
   const {assignees = [], documentId} = item._metadata ?? {}
   const schema = useSchema()
+  const state = states.find((s) => s.id === item._metadata?.state)
 
   // Perform document operations after State changes
   // If State has changed and the document needs to be un/published
@@ -80,10 +86,21 @@ export function DocumentCard(props: DocumentCardProps) {
 
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? `transparent` : `default`
-  const {validation = [], isValidating} = useValidationStatus(
-    documentId ?? ``,
-    item._type
-  )
+
+  // Validation only runs if the state requests it
+  // Because it's not performant to run it on many documents simultaneously
+  // So we fake it here, and maybe set it inside <Validate />
+  const [optimisticValidation, setOptimisticValidation] =
+    useState<ValidationStatusType>({
+      isValidating: state?.requireValidation ?? false,
+      validation: [],
+    })
+
+  const {isValidating, validation} = optimisticValidation
+
+  const handleValidation = useCallback((updates: ValidationStatusType) => {
+    setOptimisticValidation(updates)
+  }, [])
 
   const cardTone = useMemo(() => {
     let tone: CardTone = defaultCardTone
@@ -92,7 +109,7 @@ export function DocumentCard(props: DocumentCardProps) {
     if (!documentId) return tone
     if (isDragging) tone = `positive`
 
-    if (!isValidating && validation.length > 0) {
+    if (state?.requireValidation && !isValidating && validation.length > 0) {
       if (validation.some((v) => v.level === 'error')) {
         tone = `critical`
       } else {
@@ -102,13 +119,14 @@ export function DocumentCard(props: DocumentCardProps) {
 
     return tone
   }, [
-    isDarkMode,
-    userRoleCanDrop,
     defaultCardTone,
+    userRoleCanDrop,
+    isDarkMode,
     documentId,
     isDragging,
-    validation,
     isValidating,
+    validation,
+    state?.requireValidation,
   ])
 
   // Update validation status
@@ -136,63 +154,72 @@ export function DocumentCard(props: DocumentCardProps) {
   )
 
   return (
-    <Box paddingBottom={3} paddingX={3}>
-      <Card radius={2} shadow={isDragging ? 3 : 1} tone={cardTone}>
-        <Stack>
-          <Card
-            borderBottom
-            radius={2}
-            padding={3}
-            paddingLeft={2}
-            tone={cardTone}
-            style={{pointerEvents: 'none'}}
-          >
-            <Flex align="center" justify="space-between" gap={1}>
-              <Box flex={1}>
-                <Preview
-                  layout="default"
-                  value={item}
-                  schemaType={schema.get(item._type) as SchemaType}
-                />
-              </Box>
-              <Box style={{flexShrink: 0}}>
-                {hasError || isDragDisabled ? null : <DragHandleIcon />}
-              </Box>
-            </Flex>
-          </Card>
+    <>
+      {state?.requireValidation ? (
+        <Validate
+          documentId={documentId}
+          type={item._type}
+          onChange={handleValidation}
+        />
+      ) : null}
+      <Box paddingBottom={3} paddingX={3}>
+        <Card radius={2} shadow={isDragging ? 3 : 1} tone={cardTone}>
+          <Stack>
+            <Card
+              borderBottom
+              radius={2}
+              padding={3}
+              paddingLeft={2}
+              tone={cardTone}
+              style={{pointerEvents: 'none'}}
+            >
+              <Flex align="center" justify="space-between" gap={1}>
+                <Box flex={1}>
+                  <Preview
+                    layout="default"
+                    value={item}
+                    schemaType={schema.get(item._type) as SchemaType}
+                  />
+                </Box>
+                <Box style={{flexShrink: 0}}>
+                  {hasError || isDragDisabled ? null : <DragHandleIcon />}
+                </Box>
+              </Flex>
+            </Card>
 
-          <Card padding={2} radius={2} tone="inherit">
-            <Flex align="center" justify="space-between" gap={3}>
-              <Box flex={1}>
-                {documentId && (
-                  <UserDisplay
-                    userList={userList}
-                    assignees={assignees}
+            <Card padding={2} radius={2} tone="inherit">
+              <Flex align="center" justify="space-between" gap={3}>
+                <Box flex={1}>
+                  {documentId && (
+                    <UserDisplay
+                      userList={userList}
+                      assignees={assignees}
+                      documentId={documentId}
+                      disabled={!userRoleCanDrop}
+                    />
+                  )}
+                </Box>
+                {validation.length > 0 ? (
+                  <ValidationStatus validation={validation} />
+                ) : null}
+                <DraftStatus document={item} />
+                <PublishedStatus document={item} />
+                <EditButton
+                  id={item._id}
+                  type={item._type}
+                  disabled={!userRoleCanDrop}
+                />
+                {isLastState ? (
+                  <CompleteButton
                     documentId={documentId}
                     disabled={!userRoleCanDrop}
                   />
-                )}
-              </Box>
-              {validation.length > 0 ? (
-                <ValidationStatus validation={validation} />
-              ) : null}
-              <DraftStatus document={item} />
-              <PublishedStatus document={item} />
-              <EditButton
-                id={item._id}
-                type={item._type}
-                disabled={!userRoleCanDrop}
-              />
-              {isLastState ? (
-                <CompleteButton
-                  documentId={documentId}
-                  disabled={!userRoleCanDrop}
-                />
-              ) : null}
-            </Flex>
-          </Card>
-        </Stack>
-      </Card>
-    </Box>
+                ) : null}
+              </Flex>
+            </Card>
+          </Stack>
+        </Card>
+      </Box>
+    </>
   )
 }

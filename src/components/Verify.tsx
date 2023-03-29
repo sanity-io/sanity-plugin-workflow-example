@@ -8,13 +8,17 @@ import {API_VERSION} from '../constants'
 import {SanityDocumentWithMetadata, State} from '../types'
 import FloatingCard from './FloatingCard'
 
-type ValidatorsProps = {
+type VerifyProps = {
   data: SanityDocumentWithMetadata[]
   userList: UserExtended[]
   states: State[]
 }
 
-export default function Validators({data, userList, states}: ValidatorsProps) {
+// This component checks the validity of the data in the Kanban
+// It will only render something it there is invalid date
+// And will render buttons to fix the data
+export default function Verify(props: VerifyProps) {
+  const {data, userList, states} = props
   const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
 

@@ -19,7 +19,7 @@ import {DocumentCard} from './DocumentCard'
 import DocumentList from './DocumentList'
 import Filters from './Filters'
 import StateTitle from './StateTitle'
-import Validators from './Validators'
+import Verify from './Verify'
 
 type WorkflowToolProps = {
   tool: Tool<WorkflowConfig>
@@ -155,12 +155,12 @@ export default function WorkflowTool(props: WorkflowToolProps) {
         // Must be between two items
         const itemBefore = destinationStateItems[destination.index - 1]
         const itemBeforeRank = itemBefore?._metadata?.orderRank
-        const itemBeforeRankParsed = itemBefore._metadata.orderRank
+        const itemBeforeRankParsed = itemBeforeRank
           ? LexoRank.parse(itemBeforeRank)
           : LexoRank.min()
         const itemAfter = destinationStateItems[destination.index]
         const itemAfterRank = itemAfter?._metadata?.orderRank
-        const itemAfterRankParsed = itemAfter._metadata.orderRank
+        const itemAfterRankParsed = itemAfterRank
           ? LexoRank.parse(itemAfterRank)
           : LexoRank.max()
 
@@ -249,7 +249,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
 
   return (
     <Flex direction="column" height="fill" overflow="hidden">
-      <Validators data={data} userList={userList} states={states} />
+      <Verify data={data} userList={userList} states={states} />
+
       <Filters
         uniqueAssignedUsers={uniqueAssignedUsers}
         selectedUserIds={selectedUserIds}
@@ -289,6 +290,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                       isDropDisabled={isDropDisabled}
                       // props required for virtualization
                       mode="virtual"
+                      // TODO: Render this as a memo/callback
                       renderClone={(provided, snapshot, rubric) => {
                         const item = data.find(
                           (doc) =>
