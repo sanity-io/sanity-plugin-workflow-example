@@ -155,12 +155,12 @@ export default function WorkflowTool(props: WorkflowToolProps) {
         // Must be between two items
         const itemBefore = destinationStateItems[destination.index - 1]
         const itemBeforeRank = itemBefore?._metadata?.orderRank
-        const itemBeforeRankParsed = itemBefore._metadata.orderRank
+        const itemBeforeRankParsed = itemBeforeRank
           ? LexoRank.parse(itemBeforeRank)
           : LexoRank.min()
         const itemAfter = destinationStateItems[destination.index]
         const itemAfterRank = itemAfter?._metadata?.orderRank
-        const itemAfterRankParsed = itemAfter._metadata.orderRank
+        const itemAfterRankParsed = itemAfterRank
           ? LexoRank.parse(itemAfterRank)
           : LexoRank.max()
 
@@ -290,6 +290,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                       isDropDisabled={isDropDisabled}
                       // props required for virtualization
                       mode="virtual"
+                      // TODO: Render this as a memo/callback
                       renderClone={(provided, snapshot, rubric) => {
                         const item = data.find(
                           (doc) =>
