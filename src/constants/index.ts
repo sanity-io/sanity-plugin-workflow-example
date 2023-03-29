@@ -24,8 +24,8 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
       title: 'Approved',
       color: 'success',
       roles: ['administrator'],
-      requireAssignment: true,
       transitions: ['changesRequested'],
+      requireAssignment: true,
     },
   ]),
 }

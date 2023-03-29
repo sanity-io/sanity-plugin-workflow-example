@@ -19,7 +19,7 @@ import {DocumentCard} from './DocumentCard'
 import DocumentList from './DocumentList'
 import Filters from './Filters'
 import StateTitle from './StateTitle'
-import Validators from './Validators'
+import Verify from './Verify'
 
 type WorkflowToolProps = {
   tool: Tool<WorkflowConfig>
@@ -249,7 +249,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
 
   return (
     <Flex direction="column" height="fill" overflow="hidden">
-      <Validators data={data} userList={userList} states={states} />
+      <Verify data={data} userList={userList} states={states} />
+
       <Filters
         uniqueAssignedUsers={uniqueAssignedUsers}
         selectedUserIds={selectedUserIds}

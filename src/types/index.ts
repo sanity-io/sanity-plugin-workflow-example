@@ -9,6 +9,7 @@ export type State = {
   // operation?: Operation
   roles?: string[]
   requireAssignment?: boolean
+  requireValidation?: boolean
   // From document badges
   color?: 'primary' | 'success' | 'warning' | 'danger'
 }
