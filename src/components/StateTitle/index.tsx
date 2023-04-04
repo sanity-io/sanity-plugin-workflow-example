@@ -1,12 +1,9 @@
-import {Flex, Card, Badge, BadgeTone} from '@sanity/ui'
 import {InfoOutlineIcon, UserIcon} from '@sanity/icons'
+import {Badge, BadgeTone, Card, Flex} from '@sanity/ui'
 import styled, {css} from 'styled-components'
 
+import {State} from '../../types'
 import {Status} from './Status'
-import {
-  // Operation,
-  State,
-} from '../../types'
 
 type StateTitleProps = {
   state: State
@@ -14,7 +11,6 @@ type StateTitleProps = {
   userRoleCanDrop: boolean
   isDropDisabled: boolean
   draggingFrom: string
-  // operation?: Operation
 }
 
 const StyledStickyCard = styled(Card)(
@@ -26,7 +22,13 @@ const StyledStickyCard = styled(Card)(
 )
 
 export default function StateTitle(props: StateTitleProps) {
-  const {state, requireAssignment, userRoleCanDrop, isDropDisabled, draggingFrom} = props
+  const {
+    state,
+    requireAssignment,
+    userRoleCanDrop,
+    isDropDisabled,
+    draggingFrom,
+  } = props
 
   let tone: BadgeTone = 'default'
   const isSource = draggingFrom === state.id
@@ -39,7 +41,11 @@ export default function StateTitle(props: StateTitleProps) {
     <StyledStickyCard paddingY={4} padding={3} tone="inherit">
       <Flex gap={3} align="center">
         <Badge
-          mode={(draggingFrom && !isDropDisabled) || isSource ? 'default' : 'outline'}
+          mode={
+            (draggingFrom && !isDropDisabled) || isSource
+              ? 'default'
+              : 'outline'
+          }
           tone={tone}
           muted={!userRoleCanDrop || isDropDisabled}
         >
@@ -57,16 +63,6 @@ export default function StateTitle(props: StateTitleProps) {
             icon={UserIcon}
           />
         ) : null}
-        {/* {operation ? (
-          <Status
-            text={
-              operation === 'publish'
-                ? `A document moved to this State will also publish the current Draft`
-                : `A document moved to this State will also unpublish the current Published version`
-            }
-            icon={operation === 'publish' ? PublishIcon : UnpublishIcon}
-          />
-        ) : null} */}
       </Flex>
     </StyledStickyCard>
   )

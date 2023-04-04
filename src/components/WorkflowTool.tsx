@@ -107,7 +107,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
   )
 
   const handleDragEnd = React.useCallback(
-    (result: DropResult) => {
+    async (result: DropResult) => {
       // Reset undroppable states
       setUndroppableStates([])
       setDraggingFrom(``)
@@ -280,7 +280,6 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                     state={state}
                     requireAssignment={state.requireAssignment ?? false}
                     userRoleCanDrop={userRoleCanDrop}
-                    // operation={state.operation}
                     isDropDisabled={isDropDisabled}
                     draggingFrom={draggingFrom}
                   />

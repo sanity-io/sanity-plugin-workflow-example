@@ -51,6 +51,18 @@ export default function Verify(props: VerifyProps) {
       }, [] as string[])
     : []
 
+  const documentsWithDuplicatedOrderIds = data?.length
+    ? data.reduce((acc, cur) => {
+        const {documentId, orderRank} = cur._metadata ?? {}
+
+        return orderRank &&
+          data.filter((d) => d._metadata?.orderRank === orderRank).length > 1 &&
+          documentId
+          ? [...acc, documentId]
+          : acc
+      }, [] as string[])
+    : []
+
   // Updates metadata documents to a valid, existing state
   const correctDocuments = React.useCallback(
     async (ids: string[]) => {
@@ -205,6 +217,17 @@ export default function Verify(props: VerifyProps) {
             documentsWithoutOrderIds.length === 1
               ? `Set Order for 1 Document`
               : `Set Order for ${documentsWithoutOrderIds.length} Documents`
+          }
+        />
+      ) : null}
+      {documentsWithDuplicatedOrderIds.length > 0 ? (
+        <Button
+          tone="caution"
+          onClick={() => addOrderToDocuments(documentsWithDuplicatedOrderIds)}
+          text={
+            documentsWithDuplicatedOrderIds.length === 1
+              ? `Set Unique Order for 1 Document`
+              : `Set Unique Order for ${documentsWithDuplicatedOrderIds.length} Documents`
           }
         />
       ) : null}
