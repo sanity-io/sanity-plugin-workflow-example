@@ -282,6 +282,14 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                     userRoleCanDrop={userRoleCanDrop}
                     isDropDisabled={isDropDisabled}
                     draggingFrom={draggingFrom}
+                    documentCount={
+                      filterItemsAndSort(
+                        data,
+                        state.id,
+                        selectedUserIds,
+                        selectedSchemaTypes
+                      ).length
+                    }
                   />
                   <Box flex={1}>
                     <Droppable
