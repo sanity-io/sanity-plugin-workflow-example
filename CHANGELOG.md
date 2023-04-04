@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.6](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2023-04-04)
+
+### Bug Fixes
+
+- add document count and increase overscan ([14bff13](https://github.com/sanity-io/sanity-plugin-workflow/commit/14bff1322f78de4b0b1f91c3ec8a5e7146722064))
+- remove ifRevisionId restriction on patches ([0fa24b5](https://github.com/sanity-io/sanity-plugin-workflow/commit/0fa24b52b82d50486bd5e008f478ff076865ccbe))
+
 ## [1.0.0-beta.5](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2023-03-29)
 
 ### Features
