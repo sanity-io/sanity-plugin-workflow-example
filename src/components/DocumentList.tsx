@@ -51,7 +51,7 @@ export default function DocumentList(props: DocumentListProps) {
     getScrollElement: () => parentRef.current,
     getItemKey: (index) => dataFiltered[index]?._metadata?.documentId ?? index,
     estimateSize: () => 113,
-    overscan: 5,
+    overscan: 10,
   })
 
   if (!data.length) {

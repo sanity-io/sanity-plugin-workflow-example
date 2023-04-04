@@ -45,45 +45,6 @@ export function DocumentCard(props: DocumentCardProps) {
   const schema = useSchema()
   const state = states.find((s) => s.id === item._metadata?.state)
 
-  // Perform document operations after State changes
-  // If State has changed and the document needs to be un/published
-  // This functionality was deemed too dangerous / unexpected
-  // Revisit with improved UX
-  // const currentState = useMemo(
-  //   () => states.find((state) => state.id === item._metadata?.state),
-  //   [states, item]
-  // )
-  // const ops = useDocumentOperation(documentId ?? ``, item._type)
-  // const toast = useToast()
-
-  // useEffect(() => {
-  //   const isDraft = item._id.startsWith('drafts.')
-
-  //   if (isDraft && currentState?.operation === 'publish' && !item?._metadata?.optimistic) {
-  //     if (!ops.publish.disabled) {
-  //       ops.publish.execute()
-  //       toast.push({
-  //         title: 'Published Document',
-  //         description: documentId,
-  //         status: 'success',
-  //       })
-  //     }
-  //   } else if (
-  //     !isDraft &&
-  //     currentState?.operation === 'unpublish' &&
-  //     !item?._metadata?.optimistic
-  //   ) {
-  //     if (!ops.unpublish.disabled) {
-  //       ops.unpublish.execute()
-  //       toast.push({
-  //         title: 'Unpublished Document',
-  //         description: documentId,
-  //         status: 'success',
-  //       })
-  //     }
-  //   }
-  // }, [currentState, documentId, item, ops, toast])
-
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? `transparent` : `default`
 

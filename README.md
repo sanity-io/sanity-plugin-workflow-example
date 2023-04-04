@@ -12,6 +12,8 @@ With Sanity Studio you can [customize your content tools to support arbitrary wo
 
 This plugin is distributed as a **reference implementation** of these customization APIs and is not considered to be a feature-complete implementation of what workflow management requires in production. It is a starting point intended to be forked and customized to the needs of your organization and content creators.
 
+A key intention of this plugin is that it **does not influence or modify whether a document is in draft or published**. It only tracks the values of a separate "metadata" document. In this implementation, an "Approved" document could be a draft but will still need publishing. "Approving" the document simply removes it from the Workflow process. You will decide if Publishing the document happens in the Studio like normal, using the [Scheduled Publishing plugin](https://www.sanity.io/plugins/scheduled-publishing) or the [Scheduling API](https://www.sanity.io/docs/scheduling-api#fa3bb95f83ed).
+
 ![Screenshot 2023-03-21 at 12 11 24](https://user-images.githubusercontent.com/9684022/226602179-5bd3d91a-9c27-431e-be18-3c70f06c6ccb.png)
 
 ## Features
@@ -51,7 +53,7 @@ Add it as a plugin in sanity.config.ts (or .js):
             // schemaTypes: ['article', 'product'],
             schemaTypes: [],
             // Optional, see below
-            states: [],
+            // states: [],
          })
      ]
  })
@@ -101,10 +103,12 @@ Once the Workflow is complete, the metadata can be removed by using the "Complet
 
 This plugin is largely based on the original Workflow Demo built into a Sanity Studio v2 project. The major differences are:
 
-* This plugin can be more easily installed and configured, not just code examples built into a Studio project
-* Documents must "opt-in" to and removed from the Workflow, in the previous version all documents were in the workflow which would fill up the interface
-* User Roles and Assignments can affect the Workflow. Set rules to enforce which States documents can move between and if being assigned to a document is required to move it to a new State
-* Ability to filter Schema types and assigned Users
+* This plugin is not concerned with nor will modify whether a document is in draft or published.
+* This plugin can be more easily installed and configured, not just code examples built into a Studio project.
+* Documents must "opt-in" to and be removed from the Workflow. In the previous version, all documents were in the workflow which would fill up the interface and negatively affect performance.
+* Document validation status can be used as a way to prevent movement through the workflow.
+* User Roles and Assignments can affect the Workflow. Set rules to enforce which States documents can move between and if being assigned to a document is required to move it to a new State.
+* This plugin can filter Schema types and assigned Users.
 
 ## License
 

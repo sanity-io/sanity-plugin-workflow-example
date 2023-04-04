@@ -65,7 +65,7 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
   }, [data])
 
   const move = React.useCallback(
-    (
+    async (
       draggedId: string,
       destination: DraggableLocation,
       states: State[],
@@ -122,11 +122,13 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
       const {_id, _type} = document
 
       // Metadata + useDocumentOperation always uses Published id
-      const {_rev, documentId} = document._metadata || {}
+      const {documentId} = document._metadata || {}
 
-      client
+      await client
         .patch(`workflow-metadata.${documentId}`)
-        .ifRevisionId(_rev as string)
+        // Removed because it was effecting fast-updates between columns
+        // TODO: Prevent dragging while patching instead while keeping optimistic updates and revert when patch fails
+        // .ifRevisionId(document._metadata._rev)
         .set({state: newStateId, orderRank: newOrder})
         .commit()
         .then(() => {
@@ -135,12 +137,13 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
             status: 'success',
           })
         })
-        .catch(() => {
+        .catch((err) => {
           // Revert optimistic update
           setLocalDocuments(currentLocalData)
 
           return toast.push({
             title: `Failed to move to "${newState?.title ?? newStateId}"`,
+            description: err.message,
             status: 'error',
           })
         })
