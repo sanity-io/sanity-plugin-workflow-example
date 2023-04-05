@@ -139,7 +139,7 @@ export default function Filters(props: FiltersProps) {
           )}
         </Flex>
 
-        {schemaTypes.length > 0 ? (
+        {schemaTypes.length > 1 ? (
           <Flex align="center" gap={1}>
             {schemaTypes.map((typeName) => {
               const schemaType = schema.get(typeName)

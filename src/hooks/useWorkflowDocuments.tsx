@@ -122,30 +122,30 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
       const {_id, _type} = document
 
       // Metadata + useDocumentOperation always uses Published id
-      const {documentId} = document._metadata || {}
+      const {documentId, _rev} = document._metadata || {}
 
       await client
         .patch(`workflow-metadata.${documentId}`)
-        // Removed because it was effecting fast-updates between columns
-        // TODO: Prevent dragging while patching instead while keeping optimistic updates and revert when patch fails
-        // .ifRevisionId(document._metadata._rev)
+        .ifRevisionId(_rev)
         .set({state: newStateId, orderRank: newOrder})
         .commit()
-        .then(() => {
-          return toast.push({
+        .then((res) => {
+          toast.push({
             title: `Moved to "${newState?.title ?? newStateId}"`,
             status: 'success',
           })
+          return res
         })
         .catch((err) => {
           // Revert optimistic update
           setLocalDocuments(currentLocalData)
 
-          return toast.push({
+          toast.push({
             title: `Failed to move to "${newState?.title ?? newStateId}"`,
             description: err.message,
             status: 'error',
           })
+          return null
         })
 
       // Send back to the workflow board so a document update can happen

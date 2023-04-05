@@ -11,6 +11,7 @@ import {DocumentCard} from './DocumentCard'
 type DocumentListProps = {
   data: SanityDocumentWithMetadata[]
   invalidDocumentIds: string[]
+  patchingIds: string[]
   selectedSchemaTypes: string[]
   selectedUserIds: string[]
   state: State
@@ -28,6 +29,7 @@ export default function DocumentList(props: DocumentListProps) {
   const {
     data = [],
     invalidDocumentIds,
+    patchingIds,
     selectedSchemaTypes,
     selectedUserIds,
     state,
@@ -70,7 +72,6 @@ export default function DocumentList(props: DocumentListProps) {
         scrollBehavior: 'auto',
       }}
     >
-      {/* {dataFiltered.map((item, itemIndex) => { */}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
         const item = dataFiltered[virtualItem.index]
 
@@ -83,6 +84,7 @@ export default function DocumentList(props: DocumentListProps) {
         const isInvalid = invalidDocumentIds.includes(documentId)
         const meInAssignees = user?.id ? assignees?.includes(user.id) : false
         const isDragDisabled =
+          patchingIds.includes(documentId) ||
           !userRoleCanDrop ||
           isInvalid ||
           !(state.requireAssignment
@@ -106,6 +108,7 @@ export default function DocumentList(props: DocumentListProps) {
                 <DocumentCard
                   userRoleCanDrop={userRoleCanDrop}
                   isDragDisabled={isDragDisabled}
+                  isPatching={patchingIds.includes(documentId)}
                   isDragging={draggableSnapshot.isDragging}
                   item={item}
                   toggleInvalidDocumentId={toggleInvalidDocumentId}

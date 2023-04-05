@@ -20,6 +20,7 @@ import {ValidationStatus} from './ValidationStatus'
 
 type DocumentCardProps = {
   isDragDisabled: boolean
+  isPatching: boolean
   userRoleCanDrop: boolean
   isDragging: boolean
   item: SanityDocumentWithMetadata
@@ -34,6 +35,7 @@ type DocumentCardProps = {
 export function DocumentCard(props: DocumentCardProps) {
   const {
     isDragDisabled,
+    isPatching,
     userRoleCanDrop,
     isDragging,
     item,
@@ -68,6 +70,7 @@ export function DocumentCard(props: DocumentCardProps) {
 
     if (!userRoleCanDrop) return isDarkMode ? `default` : `transparent`
     if (!documentId) return tone
+    if (isPatching) tone = isDarkMode ? `default` : `transparent`
     if (isDragging) tone = `positive`
 
     if (state?.requireValidation && !isValidating && validation.length > 0) {
@@ -82,6 +85,7 @@ export function DocumentCard(props: DocumentCardProps) {
   }, [
     defaultCardTone,
     userRoleCanDrop,
+    isPatching,
     isDarkMode,
     documentId,
     isDragging,
@@ -137,13 +141,18 @@ export function DocumentCard(props: DocumentCardProps) {
               <Flex align="center" justify="space-between" gap={1}>
                 <Box flex={1}>
                   <Preview
-                    layout="default"
+                    // Like as in desk lists, except it has an intermittent loading state
+                    // layout="default"
+                    // Like in the PTE, with no loading state
+                    layout="block"
                     value={item}
                     schemaType={schema.get(item._type) as SchemaType}
                   />
                 </Box>
                 <Box style={{flexShrink: 0}}>
-                  {hasError || isDragDisabled ? null : <DragHandleIcon />}
+                  {hasError || isDragDisabled || isPatching ? null : (
+                    <DragHandleIcon />
+                  )}
                 </Box>
               </Flex>
             </Card>
@@ -170,13 +179,21 @@ export function DocumentCard(props: DocumentCardProps) {
                   type={item._type}
                   disabled={!userRoleCanDrop}
                 />
-                {isLastState ? (
+                {isLastState && states.length <= 3 ? (
                   <CompleteButton
                     documentId={documentId}
                     disabled={!userRoleCanDrop}
                   />
                 ) : null}
               </Flex>
+              {isLastState && states.length > 3 ? (
+                <Stack paddingTop={2}>
+                  <CompleteButton
+                    documentId={documentId}
+                    disabled={!userRoleCanDrop}
+                  />
+                </Stack>
+              ) : null}
             </Card>
           </Stack>
         </Card>

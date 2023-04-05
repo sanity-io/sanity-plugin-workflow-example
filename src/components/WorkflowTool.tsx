@@ -1,10 +1,20 @@
 import {
   DragDropContext,
+  DraggableChildrenFn,
   DragStart,
   Droppable,
   DropResult,
 } from '@hello-pangea/dnd'
-import {Box, Card, Container, Flex, Grid, Spinner, useTheme} from '@sanity/ui'
+import {
+  Box,
+  Card,
+  Container,
+  Flex,
+  Grid,
+  Spinner,
+  useTheme,
+  useToast,
+} from '@sanity/ui'
 import {LexoRank} from 'lexorank'
 import React from 'react'
 import {Tool, useCurrentUser} from 'sanity'
@@ -30,6 +40,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
 
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? 'default' : 'transparent'
+  const toast = useToast()
 
   const userList = useProjectUsers({apiVersion: API_VERSION})
 
@@ -39,6 +50,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     : []
 
   const {workflowData, operations} = useWorkflowDocuments(schemaTypes)
+  const [patchingIds, setPatchingIds] = React.useState<string[]>([])
 
   // Data to display in cards
   const {data, loading, error} = workflowData
@@ -128,48 +140,94 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       const destinationStateItems = [
         ...filterItemsAndSort(data, destination.droppableId, [], null),
       ]
+      const destinationStateIndex = states.findIndex(
+        (s) => s.id === destination.droppableId
+      )
+      const globalStateMinimumRank = data[0]._metadata.orderRank
+      const globalStateMaximumRank = data[data.length - 1]._metadata.orderRank
 
       let newOrder
 
       if (!destinationStateItems.length) {
         // Only item in state
         // New minimum rank
-        newOrder = LexoRank.min().toString()
+        if (destinationStateIndex === 0) {
+          // Only the first state should generate an absolute minimum rank
+          newOrder = LexoRank.min().toString()
+        } else {
+          // Otherwise create the next rank between min and the globally minimum rank
+          newOrder = LexoRank.parse(globalStateMinimumRank)
+            .between(LexoRank.min())
+            .toString()
+        }
       } else if (destination.index === 0) {
         // Now first item in order
         const firstItemOrderRank = [...destinationStateItems].shift()?._metadata
           ?.orderRank
-        newOrder =
-          firstItemOrderRank && typeof firstItemOrderRank === 'string'
-            ? LexoRank.parse(firstItemOrderRank).genPrev().toString()
-            : LexoRank.min().toString()
+
+        if (firstItemOrderRank && typeof firstItemOrderRank === 'string') {
+          newOrder = LexoRank.parse(firstItemOrderRank).genPrev().toString()
+        } else if (destinationStateIndex === 0) {
+          // Only the first state should generate an absolute minimum rank
+          newOrder = LexoRank.min().toString()
+        } else {
+          // Otherwise create the next rank between min and the globally minimum rank
+          newOrder = LexoRank.parse(globalStateMinimumRank)
+            .between(LexoRank.min())
+            .toString()
+        }
       } else if (destination.index + 1 === destinationStateItems.length) {
         // Now last item in order
         const lastItemOrderRank = [...destinationStateItems].pop()?._metadata
           ?.orderRank
-        newOrder =
-          lastItemOrderRank && typeof lastItemOrderRank === 'string'
-            ? LexoRank.parse(lastItemOrderRank).genNext().toString()
-            : LexoRank.min().toString()
+
+        if (lastItemOrderRank && typeof lastItemOrderRank === 'string') {
+          newOrder = LexoRank.parse(lastItemOrderRank).genNext().toString()
+        } else if (destinationStateIndex === states.length - 1) {
+          // Only the last state should generate an absolute maximum rank
+          newOrder = LexoRank.max().toString()
+        } else {
+          // Otherwise create the next rank between max and the globally maximum rank
+          newOrder = LexoRank.parse(globalStateMaximumRank)
+            .between(LexoRank.min())
+            .toString()
+        }
       } else {
         // Must be between two items
         const itemBefore = destinationStateItems[destination.index - 1]
         const itemBeforeRank = itemBefore?._metadata?.orderRank
-        const itemBeforeRankParsed = itemBeforeRank
-          ? LexoRank.parse(itemBeforeRank)
-          : LexoRank.min()
+        let itemBeforeRankParsed
+        if (itemBeforeRank) {
+          itemBeforeRankParsed = LexoRank.parse(itemBeforeRank)
+        } else if (destinationStateIndex === 0) {
+          itemBeforeRankParsed = LexoRank.min()
+        } else {
+          itemBeforeRankParsed = LexoRank.parse(globalStateMinimumRank)
+        }
+
         const itemAfter = destinationStateItems[destination.index]
         const itemAfterRank = itemAfter?._metadata?.orderRank
-        const itemAfterRankParsed = itemAfterRank
-          ? LexoRank.parse(itemAfterRank)
-          : LexoRank.max()
+        let itemAfterRankParsed
+        if (itemAfterRank) {
+          itemAfterRankParsed = LexoRank.parse(itemAfterRank)
+        } else if (destinationStateIndex === states.length - 1) {
+          itemAfterRankParsed = LexoRank.max()
+        } else {
+          itemAfterRankParsed = LexoRank.parse(globalStateMaximumRank)
+        }
 
         newOrder = itemBeforeRankParsed.between(itemAfterRankParsed).toString()
       }
 
-      move(draggableId, destination, states, newOrder)
+      setPatchingIds([...patchingIds, draggableId])
+      toast.push({
+        status: 'info',
+        title: 'Updating document state...',
+      })
+      await move(draggableId, destination, states, newOrder)
+      setPatchingIds((ids: string[]) => ids.filter((id) => id !== draggableId))
     },
-    [data, move, states]
+    [data, patchingIds, toast, move, states]
   )
 
   // Used for the user filter UI
@@ -222,6 +280,41 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       )
     },
     []
+  )
+
+  const Clone: DraggableChildrenFn = React.useCallback(
+    (provided, snapshot, rubric) => {
+      const item = data.find(
+        (doc) => doc?._metadata?.documentId === rubric.draggableId
+      )
+
+      return (
+        <div
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          ref={provided.innerRef}
+        >
+          {item ? (
+            <DocumentCard
+              // Assumed false, if it's dragging it's not disabled
+              isDragDisabled={false}
+              // Assumed false, if it's dragging it's not patching
+              isPatching={false}
+              // Assumed true, if you can drag it you can drop it
+              userRoleCanDrop
+              isDragging={snapshot.isDragging}
+              item={item}
+              states={states}
+              toggleInvalidDocumentId={toggleInvalidDocumentId}
+              userList={userList}
+            />
+          ) : (
+            <Feedback title="Item not found" tone="caution" />
+          )}
+        </div>
+      )
+    },
+    [data, states, toggleInvalidDocumentId, userList]
   )
 
   if (!states?.length) {
@@ -297,37 +390,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                       isDropDisabled={isDropDisabled}
                       // props required for virtualization
                       mode="virtual"
-                      // TODO: Render this as a memo/callback
-                      renderClone={(provided, snapshot, rubric) => {
-                        const item = data.find(
-                          (doc) =>
-                            doc?._metadata?.documentId === rubric.draggableId
-                        )
-
-                        return (
-                          <div
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            ref={provided.innerRef}
-                          >
-                            {item ? (
-                              <DocumentCard
-                                isDragDisabled={false}
-                                userRoleCanDrop={userRoleCanDrop}
-                                isDragging={snapshot.isDragging}
-                                item={item}
-                                states={states}
-                                toggleInvalidDocumentId={
-                                  toggleInvalidDocumentId
-                                }
-                                userList={userList}
-                              />
-                            ) : (
-                              <Feedback title="Item not found" tone="caution" />
-                            )}
-                          </div>
-                        )
-                      }}
+                      renderClone={Clone}
                     >
                       {(provided, snapshot) => (
                         <Card
@@ -349,6 +412,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                           <DocumentList
                             data={data}
                             invalidDocumentIds={invalidDocumentIds}
+                            patchingIds={patchingIds}
                             selectedSchemaTypes={selectedSchemaTypes}
                             selectedUserIds={selectedUserIds}
                             state={state}

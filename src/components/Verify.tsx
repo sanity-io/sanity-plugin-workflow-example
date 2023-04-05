@@ -130,17 +130,26 @@ export default function Verify(props: VerifyProps) {
         status: 'info',
       })
 
-      // Get first order value
-      const firstOrder = data[0]?._metadata?.orderRank
-      let newLexo =
+      // Get first and second order values
+      const [firstOrder, secondOrder] = [...data]
+        .slice(0, 2)
+        .map((d) => d._metadata?.orderRank)
+      const minLexo =
         firstOrder && data.length !== ids.length
           ? LexoRank.parse(firstOrder)
           : LexoRank.min()
+      const maxLexo =
+        secondOrder && data.length !== ids.length
+          ? LexoRank.parse(secondOrder)
+          : LexoRank.max()
+      let newLexo = minLexo.between(maxLexo)
+      const lastLexo = maxLexo
 
       const tx = client.transaction()
 
+      // Create a new in-between value for each document
       for (let index = 0; index < ids.length; index += 1) {
-        newLexo = newLexo.genNext().genNext()
+        newLexo = newLexo.between(lastLexo)
 
         tx.patch(`workflow-metadata.${ids[index]}`, {
           set: {orderRank: newLexo.toString()},
