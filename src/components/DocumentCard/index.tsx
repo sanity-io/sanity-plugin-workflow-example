@@ -120,7 +120,6 @@ export function DocumentCard(props: DocumentCardProps) {
 
   return (
     <>
-      {item._metadata.orderRank}
       {state?.requireValidation ? (
         <Validate
           documentId={documentId}
@@ -142,7 +141,10 @@ export function DocumentCard(props: DocumentCardProps) {
               <Flex align="center" justify="space-between" gap={1}>
                 <Box flex={1}>
                   <Preview
-                    layout="default"
+                    // Like as in desk lists, except it has an intermittent loading state
+                    // layout="default"
+                    // Like in the PTE, with no loading state
+                    layout="block"
                     value={item}
                     schemaType={schema.get(item._type) as SchemaType}
                   />
@@ -177,13 +179,21 @@ export function DocumentCard(props: DocumentCardProps) {
                   type={item._type}
                   disabled={!userRoleCanDrop}
                 />
-                {isLastState ? (
+                {isLastState && states.length <= 3 ? (
                   <CompleteButton
                     documentId={documentId}
                     disabled={!userRoleCanDrop}
                   />
                 ) : null}
               </Flex>
+              {isLastState && states.length > 3 ? (
+                <Stack paddingTop={2}>
+                  <CompleteButton
+                    documentId={documentId}
+                    disabled={!userRoleCanDrop}
+                  />
+                </Stack>
+              ) : null}
             </Card>
           </Stack>
         </Card>

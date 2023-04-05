@@ -72,7 +72,6 @@ export default function DocumentList(props: DocumentListProps) {
         scrollBehavior: 'auto',
       }}
     >
-      {/* {dataFiltered.map((item, itemIndex) => { */}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
         const item = dataFiltered[virtualItem.index]
 

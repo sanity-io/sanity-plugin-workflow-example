@@ -1,5 +1,6 @@
 import {
   DragDropContext,
+  DraggableChildrenFn,
   DragStart,
   Droppable,
   DropResult,
@@ -281,6 +282,40 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     []
   )
 
+  const Clone: DraggableChildrenFn = React.useCallback(
+    (provided, snapshot, rubric) => {
+      const item = data.find(
+        (doc) => doc?._metadata?.documentId === rubric.draggableId
+      )
+
+      return (
+        <div
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          ref={provided.innerRef}
+        >
+          {item ? (
+            <DocumentCard
+              isDragDisabled={false}
+              // Assumed false, if it's dragging it's not patching
+              isPatching={false}
+              // Assumed true, if you can drag it you can drop it
+              userRoleCanDrop
+              isDragging={snapshot.isDragging}
+              item={item}
+              states={states}
+              toggleInvalidDocumentId={toggleInvalidDocumentId}
+              userList={userList}
+            />
+          ) : (
+            <Feedback title="Item not found" tone="caution" />
+          )}
+        </div>
+      )
+    },
+    [data, states, toggleInvalidDocumentId, userList]
+  )
+
   if (!states?.length) {
     return (
       <Container width={1} padding={5}>
@@ -354,40 +389,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                       isDropDisabled={isDropDisabled}
                       // props required for virtualization
                       mode="virtual"
-                      // TODO: Render this as a memo/callback
-                      renderClone={(provided, snapshot, rubric) => {
-                        const item = data.find(
-                          (doc) =>
-                            doc?._metadata?.documentId === rubric.draggableId
-                        )
-
-                        return (
-                          <div
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            ref={provided.innerRef}
-                          >
-                            {item ? (
-                              <DocumentCard
-                                isDragDisabled={false}
-                                isPatching={patchingIds.includes(
-                                  item._metadata.documentId
-                                )}
-                                userRoleCanDrop={userRoleCanDrop}
-                                isDragging={snapshot.isDragging}
-                                item={item}
-                                states={states}
-                                toggleInvalidDocumentId={
-                                  toggleInvalidDocumentId
-                                }
-                                userList={userList}
-                              />
-                            ) : (
-                              <Feedback title="Item not found" tone="caution" />
-                            )}
-                          </div>
-                        )
-                      }}
+                      renderClone={Clone}
                     >
                       {(provided, snapshot) => (
                         <Card
