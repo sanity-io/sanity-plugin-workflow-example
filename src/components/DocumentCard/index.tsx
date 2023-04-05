@@ -120,6 +120,7 @@ export function DocumentCard(props: DocumentCardProps) {
 
   return (
     <>
+      {item._metadata.orderRank}
       {state?.requireValidation ? (
         <Validate
           documentId={documentId}

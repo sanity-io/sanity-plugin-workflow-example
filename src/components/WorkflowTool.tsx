@@ -139,41 +139,81 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       const destinationStateItems = [
         ...filterItemsAndSort(data, destination.droppableId, [], null),
       ]
+      const destinationStateIndex = states.findIndex(
+        (s) => s.id === destination.droppableId
+      )
+      const globalStateMinimumRank = data[0]._metadata.orderRank
+      const globalStateMaximumRank = data[data.length - 1]._metadata.orderRank
 
       let newOrder
 
       if (!destinationStateItems.length) {
         // Only item in state
         // New minimum rank
-        newOrder = LexoRank.min().toString()
+        if (destinationStateIndex === 0) {
+          // Only the first state should generate an absolute minimum rank
+          newOrder = LexoRank.min().toString()
+        } else {
+          // Otherwise create the next rank between min and the globally minimum rank
+          newOrder = LexoRank.parse(globalStateMinimumRank)
+            .between(LexoRank.min())
+            .toString()
+        }
       } else if (destination.index === 0) {
         // Now first item in order
         const firstItemOrderRank = [...destinationStateItems].shift()?._metadata
           ?.orderRank
-        newOrder =
-          firstItemOrderRank && typeof firstItemOrderRank === 'string'
-            ? LexoRank.parse(firstItemOrderRank).genPrev().toString()
-            : LexoRank.min().toString()
+
+        if (firstItemOrderRank && typeof firstItemOrderRank === 'string') {
+          newOrder = LexoRank.parse(firstItemOrderRank).genPrev().toString()
+        } else if (destinationStateIndex === 0) {
+          // Only the first state should generate an absolute minimum rank
+          newOrder = LexoRank.min().toString()
+        } else {
+          // Otherwise create the next rank between min and the globally minimum rank
+          newOrder = LexoRank.parse(globalStateMinimumRank)
+            .between(LexoRank.min())
+            .toString()
+        }
       } else if (destination.index + 1 === destinationStateItems.length) {
         // Now last item in order
         const lastItemOrderRank = [...destinationStateItems].pop()?._metadata
           ?.orderRank
-        newOrder =
-          lastItemOrderRank && typeof lastItemOrderRank === 'string'
-            ? LexoRank.parse(lastItemOrderRank).genNext().toString()
-            : LexoRank.min().toString()
+
+        if (lastItemOrderRank && typeof lastItemOrderRank === 'string') {
+          newOrder = LexoRank.parse(lastItemOrderRank).genNext().toString()
+        } else if (destinationStateIndex === states.length - 1) {
+          // Only the last state should generate an absolute maximum rank
+          newOrder = LexoRank.max().toString()
+        } else {
+          // Otherwise create the next rank between max and the globally maximum rank
+          newOrder = LexoRank.parse(globalStateMaximumRank)
+            .between(LexoRank.min())
+            .toString()
+        }
       } else {
         // Must be between two items
         const itemBefore = destinationStateItems[destination.index - 1]
         const itemBeforeRank = itemBefore?._metadata?.orderRank
-        const itemBeforeRankParsed = itemBeforeRank
-          ? LexoRank.parse(itemBeforeRank)
-          : LexoRank.min()
+        let itemBeforeRankParsed
+        if (itemBeforeRank) {
+          itemBeforeRankParsed = LexoRank.parse(itemBeforeRank)
+        } else if (destinationStateIndex === 0) {
+          itemBeforeRankParsed = LexoRank.min()
+        } else {
+          itemBeforeRankParsed = LexoRank.parse(globalStateMinimumRank)
+        }
+
         const itemAfter = destinationStateItems[destination.index]
         const itemAfterRank = itemAfter?._metadata?.orderRank
-        const itemAfterRankParsed = itemAfterRank
-          ? LexoRank.parse(itemAfterRank)
-          : LexoRank.max()
+        let itemAfterRankParsed
+        if (itemAfterRank) {
+          itemAfterRankParsed = LexoRank.parse(itemAfterRank)
+        } else if (destinationStateIndex === states.length - 1) {
+          itemAfterRankParsed = LexoRank.max()
+        } else {
+          itemAfterRankParsed = LexoRank.parse(globalStateMaximumRank)
+        }
 
         newOrder = itemBeforeRankParsed.between(itemAfterRankParsed).toString()
       }
@@ -186,7 +226,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
       await move(draggableId, destination, states, newOrder)
       setPatchingIds((ids: string[]) => ids.filter((id) => id !== draggableId))
     },
-    [data, move, states, patchingIds]
+    [data, patchingIds, toast, move, states]
   )
 
   // Used for the user filter UI

@@ -85,6 +85,7 @@ export default function DocumentList(props: DocumentListProps) {
         const isInvalid = invalidDocumentIds.includes(documentId)
         const meInAssignees = user?.id ? assignees?.includes(user.id) : false
         const isDragDisabled =
+          patchingIds.includes(documentId) ||
           !userRoleCanDrop ||
           isInvalid ||
           !(state.requireAssignment
