@@ -4,7 +4,16 @@ import {
   Droppable,
   DropResult,
 } from '@hello-pangea/dnd'
-import {Box, Card, Container, Flex, Grid, Spinner, useTheme} from '@sanity/ui'
+import {
+  Box,
+  Card,
+  Container,
+  Flex,
+  Grid,
+  Spinner,
+  useTheme,
+  useToast,
+} from '@sanity/ui'
 import {LexoRank} from 'lexorank'
 import React from 'react'
 import {Tool, useCurrentUser} from 'sanity'
@@ -30,6 +39,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
 
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? 'default' : 'transparent'
+  const toast = useToast()
 
   const userList = useProjectUsers({apiVersion: API_VERSION})
 
@@ -39,6 +49,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     : []
 
   const {workflowData, operations} = useWorkflowDocuments(schemaTypes)
+  const [patchingIds, setPatchingIds] = React.useState<string[]>([])
 
   // Data to display in cards
   const {data, loading, error} = workflowData
@@ -167,9 +178,15 @@ export default function WorkflowTool(props: WorkflowToolProps) {
         newOrder = itemBeforeRankParsed.between(itemAfterRankParsed).toString()
       }
 
-      move(draggableId, destination, states, newOrder)
+      setPatchingIds([...patchingIds, draggableId])
+      toast.push({
+        status: 'info',
+        title: 'Updating document state...',
+      })
+      await move(draggableId, destination, states, newOrder)
+      setPatchingIds((ids: string[]) => ids.filter((id) => id !== draggableId))
     },
-    [data, move, states]
+    [data, move, states, patchingIds]
   )
 
   // Used for the user filter UI
@@ -313,6 +330,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                             {item ? (
                               <DocumentCard
                                 isDragDisabled={false}
+                                isPatching={patchingIds.includes(
+                                  item._metadata.documentId
+                                )}
                                 userRoleCanDrop={userRoleCanDrop}
                                 isDragging={snapshot.isDragging}
                                 item={item}
@@ -349,6 +369,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                           <DocumentList
                             data={data}
                             invalidDocumentIds={invalidDocumentIds}
+                            patchingIds={patchingIds}
                             selectedSchemaTypes={selectedSchemaTypes}
                             selectedUserIds={selectedUserIds}
                             state={state}

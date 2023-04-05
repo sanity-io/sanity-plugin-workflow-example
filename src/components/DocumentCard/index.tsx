@@ -20,6 +20,7 @@ import {ValidationStatus} from './ValidationStatus'
 
 type DocumentCardProps = {
   isDragDisabled: boolean
+  isPatching: boolean
   userRoleCanDrop: boolean
   isDragging: boolean
   item: SanityDocumentWithMetadata
@@ -34,6 +35,7 @@ type DocumentCardProps = {
 export function DocumentCard(props: DocumentCardProps) {
   const {
     isDragDisabled,
+    isPatching,
     userRoleCanDrop,
     isDragging,
     item,
@@ -68,6 +70,7 @@ export function DocumentCard(props: DocumentCardProps) {
 
     if (!userRoleCanDrop) return isDarkMode ? `default` : `transparent`
     if (!documentId) return tone
+    if (isPatching) tone = isDarkMode ? `default` : `transparent`
     if (isDragging) tone = `positive`
 
     if (state?.requireValidation && !isValidating && validation.length > 0) {
@@ -82,6 +85,7 @@ export function DocumentCard(props: DocumentCardProps) {
   }, [
     defaultCardTone,
     userRoleCanDrop,
+    isPatching,
     isDarkMode,
     documentId,
     isDragging,
@@ -143,7 +147,9 @@ export function DocumentCard(props: DocumentCardProps) {
                   />
                 </Box>
                 <Box style={{flexShrink: 0}}>
-                  {hasError || isDragDisabled ? null : <DragHandleIcon />}
+                  {hasError || isDragDisabled || isPatching ? null : (
+                    <DragHandleIcon />
+                  )}
                 </Box>
               </Flex>
             </Card>
