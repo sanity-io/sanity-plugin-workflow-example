@@ -296,6 +296,7 @@ export default function WorkflowTool(props: WorkflowToolProps) {
         >
           {item ? (
             <DocumentCard
+              // Assumed false, if it's dragging it's not disabled
               isDragDisabled={false}
               // Assumed false, if it's dragging it's not patching
               isPatching={false}
