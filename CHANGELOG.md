@@ -5,6 +5,19 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.7](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2023-04-05)
+
+### Features
+
+- explainer text on 'complete' button ([b0bb891](https://github.com/sanity-io/sanity-plugin-workflow/commit/b0bb89174be09fd91b9ec829a3ecdb2516f9f603))
+- hide schema filters if there is only one ([f19923a](https://github.com/sanity-io/sanity-plugin-workflow/commit/f19923ab0ca4c5997a9fea678880ba4eed72bf36))
+- prevent dragging until patch is completed ([c71b768](https://github.com/sanity-io/sanity-plugin-workflow/commit/c71b76841c6ca553081bdbea905d5e60de1b068e))
+
+### Bug Fixes
+
+- more predictable orderRank generation ([05ccd4b](https://github.com/sanity-io/sanity-plugin-workflow/commit/05ccd4bea5ef031b380c3f1d0a1dab9b595ee0fc))
+- unique ordering ([731d012](https://github.com/sanity-io/sanity-plugin-workflow/commit/731d0122ad68b8f90541bd306dbde74dc6fe7ced))
+
 ## [1.0.0-beta.6](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2023-04-04)
 
 ### Bug Fixes
