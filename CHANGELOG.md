@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.8](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2023-04-12)
+
+### Bug Fixes
+
+- more robust 'order reset' ([45b609f](https://github.com/sanity-io/sanity-plugin-workflow/commit/45b609ffabc48929eb118c9bec94f9daa9634126))
+- update ui ([a692fda](https://github.com/sanity-io/sanity-plugin-workflow/commit/a692fdac6d734c87d25d39a2a89ce1fd71af6870))
+
 ## [1.0.0-beta.7](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2023-04-05)
 
 ### Features
