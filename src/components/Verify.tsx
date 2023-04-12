@@ -5,6 +5,7 @@ import {useClient} from 'sanity'
 import {UserExtended} from 'sanity-plugin-utils'
 
 import {API_VERSION} from '../constants'
+import {generateMultipleOrderRanks} from '../helpers/generateMultipleOrderRanks'
 import {SanityDocumentWithMetadata, State} from '../types'
 import FloatingCard from './FloatingCard'
 
@@ -32,16 +33,17 @@ export default function Verify(props: VerifyProps) {
       }, [] as string[])
     : []
 
-  const documentsWithInvalidUserIds = data?.length
-    ? data.reduce((acc, cur) => {
-        const {documentId, assignees} = cur._metadata ?? {}
-        const allAssigneesExist = assignees?.length
-          ? assignees?.every((a) => userList.find((u) => u.id === a))
-          : true
+  const documentsWithInvalidUserIds =
+    data?.length && userList?.length
+      ? data.reduce((acc, cur) => {
+          const {documentId, assignees} = cur._metadata ?? {}
+          const allAssigneesExist = assignees?.length
+            ? assignees?.every((a) => userList.find((u) => u.id === a))
+            : true
 
-        return !allAssigneesExist && documentId ? [...acc, documentId] : acc
-      }, [] as string[])
-    : []
+          return !allAssigneesExist && documentId ? [...acc, documentId] : acc
+        }, [] as string[])
+      : []
 
   const documentsWithoutOrderIds = data?.length
     ? data.reduce((acc, cur) => {
@@ -130,29 +132,51 @@ export default function Verify(props: VerifyProps) {
         status: 'info',
       })
 
-      // Get first and second order values
+      // Get first and second order values, if they exist
       const [firstOrder, secondOrder] = [...data]
         .slice(0, 2)
         .map((d) => d._metadata?.orderRank)
-      const minLexo =
-        firstOrder && data.length !== ids.length
-          ? LexoRank.parse(firstOrder)
-          : LexoRank.min()
-      const maxLexo =
-        secondOrder && data.length !== ids.length
-          ? LexoRank.parse(secondOrder)
-          : LexoRank.max()
-      let newLexo = minLexo.between(maxLexo)
-      const lastLexo = maxLexo
+      const minLexo = firstOrder ? LexoRank.parse(firstOrder) : undefined
+      const maxLexo = secondOrder ? LexoRank.parse(secondOrder) : undefined
+      const ranks = generateMultipleOrderRanks(ids.length, minLexo, maxLexo)
 
       const tx = client.transaction()
 
       // Create a new in-between value for each document
       for (let index = 0; index < ids.length; index += 1) {
-        newLexo = newLexo.between(lastLexo)
-
         tx.patch(`workflow-metadata.${ids[index]}`, {
-          set: {orderRank: newLexo.toString()},
+          set: {orderRank: ranks[index].toString()},
+        })
+      }
+
+      await tx.commit()
+
+      toast.push({
+        title: `Added order to ${
+          ids.length === 1 ? `1 Document` : `${ids.length} Documents`
+        }`,
+        status: 'success',
+      })
+    },
+    [data, client, toast]
+  )
+
+  // Reset order value on all metadata documents
+  const resetOrderOfAllDocuments = React.useCallback(
+    async (ids: string[]) => {
+      toast.push({
+        title: 'Adding ordering...',
+        status: 'info',
+      })
+
+      const ranks = generateMultipleOrderRanks(ids.length)
+
+      const tx = client.transaction()
+
+      // Create a new in-between value for each document
+      for (let index = 0; index < ids.length; index += 1) {
+        tx.patch(`workflow-metadata.${ids[index]}`, {
+          set: {orderRank: ranks[index].toString()},
         })
       }
 
@@ -199,6 +223,7 @@ export default function Verify(props: VerifyProps) {
       {documentsWithoutValidMetadataIds.length > 0 ? (
         <Button
           tone="caution"
+          mode="ghost"
           onClick={() => correctDocuments(documentsWithoutValidMetadataIds)}
           text={
             documentsWithoutValidMetadataIds.length === 1
@@ -210,6 +235,7 @@ export default function Verify(props: VerifyProps) {
       {documentsWithInvalidUserIds.length > 0 ? (
         <Button
           tone="caution"
+          mode="ghost"
           onClick={() => removeUsersFromDocuments(documentsWithInvalidUserIds)}
           text={
             documentsWithInvalidUserIds.length === 1
@@ -221,6 +247,7 @@ export default function Verify(props: VerifyProps) {
       {documentsWithoutOrderIds.length > 0 ? (
         <Button
           tone="caution"
+          mode="ghost"
           onClick={() => addOrderToDocuments(documentsWithoutOrderIds)}
           text={
             documentsWithoutOrderIds.length === 1
@@ -230,36 +257,41 @@ export default function Verify(props: VerifyProps) {
         />
       ) : null}
       {documentsWithDuplicatedOrderIds.length > 0 ? (
-        <Button
-          tone="caution"
-          onClick={() => addOrderToDocuments(documentsWithDuplicatedOrderIds)}
-          text={
-            documentsWithDuplicatedOrderIds.length === 1
-              ? `Set Unique Order for 1 Document`
-              : `Set Unique Order for ${documentsWithDuplicatedOrderIds.length} Documents`
-          }
-        />
+        <>
+          <Button
+            tone="caution"
+            mode="ghost"
+            onClick={() => addOrderToDocuments(documentsWithDuplicatedOrderIds)}
+            text={
+              documentsWithDuplicatedOrderIds.length === 1
+                ? `Set Unique Order for 1 Document`
+                : `Set Unique Order for ${documentsWithDuplicatedOrderIds.length} Documents`
+            }
+          />
+          <Button
+            tone="caution"
+            mode="ghost"
+            onClick={() =>
+              resetOrderOfAllDocuments(
+                data.map((doc) => String(doc._metadata?.documentId))
+              )
+            }
+            text={
+              data.length === 1
+                ? `Reset Order for 1 Document`
+                : `Reset Order for all ${data.length} Documents`
+            }
+          />
+        </>
       ) : null}
       {orphanedMetadataDocumentIds.length > 0 ? (
         <Button
           text="Cleanup orphaned metadata"
           onClick={handleOrphans}
           tone="caution"
+          mode="ghost"
         />
       ) : null}
-      {/* <Button
-        tone="caution"
-        onClick={() =>
-          addOrderToDocuments(
-            data.map((doc) => String(doc._metadata?.documentId))
-          )
-        }
-        text={
-          data.length === 1
-            ? `Reset Order for 1 Document`
-            : `Reset Order for all ${data.length} Documents`
-        }
-      /> */}
     </FloatingCard>
   )
 }
