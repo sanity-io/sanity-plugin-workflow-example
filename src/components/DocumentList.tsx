@@ -94,7 +94,8 @@ export default function DocumentList(props: DocumentListProps) {
         return (
           <Draggable
             // The metadata's documentId is always the published one to avoid rerendering
-            key={documentId}
+            // key={documentId}
+            key={virtualItem.key}
             draggableId={documentId}
             index={virtualItem.index}
             isDragDisabled={isDragDisabled}

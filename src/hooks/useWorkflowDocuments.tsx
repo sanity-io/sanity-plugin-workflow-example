@@ -131,7 +131,10 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
         .commit()
         .then((res) => {
           toast.push({
-            title: `Moved to "${newState?.title ?? newStateId}"`,
+            title:
+              newState.id === document._metadata.state
+                ? `Reordered in "${newState?.title ?? newStateId}"`
+                : `Moved to "${newState?.title ?? newStateId}"`,
             status: 'success',
           })
           return res
