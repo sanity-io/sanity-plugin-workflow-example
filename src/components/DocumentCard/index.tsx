@@ -141,10 +141,8 @@ export function DocumentCard(props: DocumentCardProps) {
               <Flex align="center" justify="space-between" gap={1}>
                 <Box flex={1}>
                   <Preview
-                    // Like as in desk lists, except it has an intermittent loading state
-                    // layout="default"
-                    // Like in the PTE, with no loading state
-                    layout="block"
+                    layout="default"
+                    skipVisibilityCheck
                     value={item}
                     schemaType={schema.get(item._type) as SchemaType}
                   />

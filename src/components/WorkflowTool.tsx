@@ -401,7 +401,6 @@ export default function WorkflowTool(props: WorkflowToolProps) {
                               : defaultCardTone
                           }
                           height="fill"
-                          paddingTop={1}
                         >
                           {loading ? (
                             <Flex padding={5} align="center" justify="center">
