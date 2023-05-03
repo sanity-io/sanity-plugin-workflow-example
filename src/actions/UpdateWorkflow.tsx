@@ -80,7 +80,7 @@ export function UpdateWorkflow(props: DocumentActionProps, actionState: State) {
         actionState?.roles?.length !== 0
 
   const actionStateIsAValidTransition =
-    currentState?.id && currentState.transitions.length
+    currentState?.id && currentState?.transitions?.length
       ? // If the Current State limits transitions to specific States
         // Check that the Action State is in Current State's transitions array
         currentState.transitions.includes(actionState.id)
@@ -90,7 +90,7 @@ export function UpdateWorkflow(props: DocumentActionProps, actionState: State) {
   const userAssignmentCanUpdateState = actionState.requireAssignment
     ? // If the Action State requires assigned users
       // Check the current user ID is in the assignees array
-      currentUser && assignees.length && assignees.includes(currentUser.id)
+      currentUser && assignees?.length && assignees.includes(currentUser.id)
     : // Otherwise this isn't a problem
       true
 
