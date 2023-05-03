@@ -60,6 +60,8 @@ export type Metadata = SanityDocumentLike & {
   orderRank: string
 }
 
+export type KeyedMetadata = {[key: string]: Metadata}
+
 export type SanityDocumentWithMetadata = {
   _metadata: Metadata
   _id: string

@@ -3,17 +3,13 @@ import {useToast} from '@sanity/ui'
 import {useCurrentUser, useValidationStatus} from 'sanity'
 import {DocumentActionProps, useClient} from 'sanity'
 
+import {useWorkflowContext} from '../components/WorkflowContext'
 import {API_VERSION} from '../constants'
 import {arraysContainMatchingString} from '../helpers/arraysContainMatchingString'
-import {useWorkflowMetadata} from '../hooks/useWorkflowMetadata'
 import {State} from '../types'
 
 // eslint-disable-next-line complexity
-export function UpdateWorkflow(
-  props: DocumentActionProps,
-  allStates: State[],
-  actionState: State
-) {
+export function UpdateWorkflow(props: DocumentActionProps, actionState: State) {
   const {id, type} = props
 
   const user = useCurrentUser()
@@ -21,10 +17,11 @@ export function UpdateWorkflow(
   const toast = useToast()
   const currentUser = useCurrentUser()
 
-  const {data, loading, error} = useWorkflowMetadata(id, allStates)
-  const {state: currentState} = data
-  const {assignees = []} = data?.metadata ?? {}
+  const {metadata, loading, error, states} = useWorkflowContext(id)
+  const currentState = states.find((s) => s.id === metadata?.state)
+  const {assignees = []} = metadata ?? {}
 
+  // TODO: Shouldn't the document action props contain this?
   const {validation, isValidating} = useValidationStatus(id, type)
   const hasValidationErrors =
     currentState?.requireValidation &&
@@ -47,15 +44,6 @@ export function UpdateWorkflow(
           status: 'success',
           title: `Document state now "${newState.title}"`,
         })
-        // Perform document operations after State changes
-        // If State has changed and the document needs to be un/published
-        // This functionality was deemed too dangerous / unexpected
-        // Revisit with improved UX
-        // if (!ops.publish.disabled && nextOperation === 'publish') {
-        //   ops.publish.execute()
-        // } else if (!ops.unpublish.disabled && nextOperation === 'unpublish') {
-        //   ops.unpublish.execute()
-        // }
       })
       .catch((err) => {
         props.onComplete()
@@ -70,14 +58,12 @@ export function UpdateWorkflow(
   // Remove button if:
   // Document is not in Workflow OR
   // The current State is the same as this actions State
-  if (!data.metadata || (currentState && currentState.id === actionState.id)) {
+  if (!metadata || (currentState && currentState.id === actionState.id)) {
     return null
   }
 
-  const currentStateIndex = allStates.findIndex(
-    (s) => s.id === currentState?.id
-  )
-  const actionStateIndex = allStates.findIndex((s) => s.id === actionState.id)
+  const currentStateIndex = states.findIndex((s) => s.id === currentState?.id)
+  const actionStateIndex = states.findIndex((s) => s.id === actionState.id)
   const direction = actionStateIndex > currentStateIndex ? 'promote' : 'demote'
   const DirectionIcon = direction === 'promote' ? ArrowRightIcon : ArrowLeftIcon
   const directionLabel = direction === 'promote' ? 'Promote' : 'Demote'

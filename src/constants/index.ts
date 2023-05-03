@@ -2,7 +2,7 @@ import {defineStates, WorkflowConfig} from '../types'
 
 export const API_VERSION = `2023-01-01`
 
-export const DEFAULT_CONFIG: WorkflowConfig = {
+export const DEFAULT_CONFIG: Required<WorkflowConfig> = {
   schemaTypes: [],
   states: defineStates([
     {

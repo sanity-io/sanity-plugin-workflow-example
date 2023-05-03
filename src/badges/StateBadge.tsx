@@ -1,11 +1,12 @@
 import {DocumentBadgeDescription} from 'sanity'
-import {useWorkflowMetadata} from '../hooks/useWorkflowMetadata'
 
-import {State} from '../types'
+import {useWorkflowContext} from '../components/WorkflowContext'
 
-export function StateBadge(states: State[], documentId: string): DocumentBadgeDescription | null {
-  const {data, loading, error} = useWorkflowMetadata(documentId, states)
-  const {state} = data
+export function StateBadge(
+  documentId: string
+): DocumentBadgeDescription | null {
+  const {metadata, loading, error, states} = useWorkflowContext(documentId)
+  const state = states.find((s) => s.id === metadata?.state)
 
   if (loading || error) {
     if (error) {

@@ -1,17 +1,14 @@
 import {CurrentUser, DocumentBadgeDescription} from 'sanity'
 import {useProjectUsers} from 'sanity-plugin-utils'
-import {API_VERSION} from '../constants'
-import {useWorkflowMetadata} from '../hooks/useWorkflowMetadata'
 
-import {State} from '../types'
+import {useWorkflowContext} from '../components/WorkflowContext'
+import {API_VERSION} from '../constants'
 
 export function AssigneesBadge(
-  states: State[],
   documentId: string,
   currentUser: CurrentUser | null
 ): DocumentBadgeDescription | null {
-  const {data, loading, error} = useWorkflowMetadata(documentId, states)
-  const {metadata} = data
+  const {metadata, loading, error} = useWorkflowContext(documentId)
   const userList = useProjectUsers({apiVersion: API_VERSION})
 
   if (loading || error || !metadata) {
@@ -29,7 +26,9 @@ export function AssigneesBadge(
   }
 
   const {assignees} = metadata ?? []
-  const hasMe = currentUser ? assignees.some((assignee) => assignee === currentUser.id) : false
+  const hasMe = currentUser
+    ? assignees.some((assignee) => assignee === currentUser.id)
+    : false
   const assigneesCount = hasMe ? assignees.length - 1 : assignees.length
   const assigneeUsers = userList.filter((user) => assignees.includes(user.id))
   const title = assigneeUsers.map((user) => user.displayName).join(', ')
@@ -39,7 +38,9 @@ export function AssigneesBadge(
   if (hasMe && assigneesCount === 0) {
     label = 'Assigned to Me'
   } else if (hasMe && assigneesCount > 0) {
-    label = `Me and ${assigneesCount} ${assigneesCount === 1 ? 'other' : 'others'}`
+    label = `Me and ${assigneesCount} ${
+      assigneesCount === 1 ? 'other' : 'others'
+    }`
   } else {
     label = `${assigneesCount} assigned`
   }
