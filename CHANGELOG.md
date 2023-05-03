@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.11](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2023-05-03)
+
+### Bug Fixes
+
+- prevent crash from unassigned document ([f117985](https://github.com/sanity-io/sanity-plugin-workflow/commit/f11798550c82c04b84aa92a50766d9dc369907cd))
+
 ## [1.0.0-beta.10](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2023-05-03)
 
 ### Features
