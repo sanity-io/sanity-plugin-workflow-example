@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.10](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2023-05-03)
+
+### Features
+
+- move document form listeners to context ([4c58042](https://github.com/sanity-io/sanity-plugin-workflow/commit/4c58042d5e13fb7280d0fb4d79d99f685973a25f))
+
 ## [1.0.0-beta.9](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2023-04-27)
 
 ### Bug Fixes
