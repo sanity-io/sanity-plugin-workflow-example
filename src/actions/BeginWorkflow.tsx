@@ -1,16 +1,15 @@
-import {useCallback, useState} from 'react'
 import {SplitVerticalIcon} from '@sanity/icons'
-import {DocumentActionProps, useClient} from 'sanity'
 import {useToast} from '@sanity/ui'
 import {LexoRank} from 'lexorank'
+import {useCallback, useState} from 'react'
+import {DocumentActionProps, useClient} from 'sanity'
 
+import {useWorkflowContext} from '../components/WorkflowContext'
 import {API_VERSION} from '../constants'
-import {useWorkflowMetadata} from '../hooks/useWorkflowMetadata'
-import {State} from '../types'
 
-export function BeginWorkflow(props: DocumentActionProps, states: State[]) {
+export function BeginWorkflow(props: DocumentActionProps) {
   const {id, draft} = props
-  const {data, loading, error} = useWorkflowMetadata(id, states)
+  const {metadata, loading, error, states} = useWorkflowContext(id)
   const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
   const [beginning, setBeginning] = useState(false)
@@ -27,19 +26,15 @@ export function BeginWorkflow(props: DocumentActionProps, states: State[]) {
       {state: states[0].id}
     )
     client
-      .createIfNotExists(
-        {
-          _id: `workflow-metadata.${id}`,
-          _type: `workflow.metadata`,
-          documentId: id,
-          state: states[0].id,
-          orderRank: lowestOrderFirstState
-            ? LexoRank.parse(lowestOrderFirstState).genNext().toString()
-            : LexoRank.min().toString(),
-        },
-        // Faster!
-        {visibility: 'async'}
-      )
+      .createIfNotExists({
+        _id: `workflow-metadata.${id}`,
+        _type: `workflow.metadata`,
+        documentId: id,
+        state: states[0].id,
+        orderRank: lowestOrderFirstState
+          ? LexoRank.parse(lowestOrderFirstState).genNext().toString()
+          : LexoRank.min().toString(),
+      })
       .then(() => {
         toast.push({
           status: 'success',
@@ -52,14 +47,14 @@ export function BeginWorkflow(props: DocumentActionProps, states: State[]) {
       })
   }, [id, states, client, toast])
 
-  if (!draft || complete || data.metadata) {
+  if (!draft || complete || metadata) {
     return null
   }
 
   return {
     icon: SplitVerticalIcon,
     type: 'dialog',
-    disabled: data?.metadata || loading || error || beginning || complete,
+    disabled: metadata || loading || error || beginning || complete,
     label: beginning ? `Beginning...` : `Begin Workflow`,
     onHandle: () => {
       handle()
