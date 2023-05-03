@@ -35,9 +35,7 @@ export function AssignWorkflow(props: DocumentActionProps) {
       content: (
         <UserAssignment
           userList={userList}
-          assignees={
-            metadata && metadata.assignees.length > 0 ? metadata.assignees : []
-          }
+          assignees={metadata?.assignees?.length > 0 ? metadata.assignees : []}
           documentId={id}
         />
       ),
