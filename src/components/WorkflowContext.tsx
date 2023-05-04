@@ -9,7 +9,7 @@ import {KeyedMetadata, WorkflowConfig} from '../types'
 export type WorkflowContextValue = Required<WorkflowConfig> & {
   data: KeyedMetadata
   loading: boolean
-  error: boolean
+  error: boolean | unknown | ProgressEvent
   ids: string[]
   addId: (id: string) => void
   removeId: (id: string) => void

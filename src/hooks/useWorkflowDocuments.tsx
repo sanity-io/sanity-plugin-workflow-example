@@ -30,7 +30,7 @@ type WorkflowDocuments = {
   workflowData: {
     data: SanityDocumentWithMetadata[]
     loading: boolean
-    error: boolean
+    error: boolean | unknown | ProgressEvent
   }
   operations: {
     move: (
