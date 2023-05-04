@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.13](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2023-05-04)
+
+### Bug Fixes
+
+- update plugin-utils ([7c7c63c](https://github.com/sanity-io/sanity-plugin-workflow/commit/7c7c63ced4669ced90c9712bbeff0343859ba6fb))
+- update types for new plugin-utils ([063e86e](https://github.com/sanity-io/sanity-plugin-workflow/commit/063e86ec03d8d3f64b58fc70cc30a08dff46b8e6))
+
 ## [1.0.0-beta.12](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2023-05-03)
 
 ### Bug Fixes
