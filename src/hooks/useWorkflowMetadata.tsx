@@ -12,7 +12,7 @@ import {KeyedMetadata, Metadata} from '../types'
 export function useWorkflowMetadata(ids: string[]): {
   data: KeyedMetadata
   loading: boolean
-  error: boolean
+  error: boolean | unknown | ProgressEvent
 } {
   const {
     data: rawData,
