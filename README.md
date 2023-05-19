@@ -1,8 +1,16 @@
+> This is a **Sanity Studio v3** plugin.
+
 # Sanity Workflow Demo Plugin Example
 
 With Sanity Studio you can [customize your content tools to support arbitrary workflows like assignment and content pipelines](https://www.sanity.io/docs/custom-workflows).
 
-This plugin is distributed as a **reference implementation** of these customization APIs and is not considered to be a feature-complete implementation of what workflow management requires in production. It is a starting point intended to be forked and customized to the needs of your organization and content creators.
+This plugin is distributed as an **example implementation** of customization APIs in the Sanity Studio V3 and is not considered to be a feature-complete implementation of what workflow management requires in production. It is meant as a starting point intended to be forked and customized to the needs of your organization and content creators, or simply as an illustration of what is possible in Sanity Studio V3.
+
+An intentional design choice of this plugin is that it **does not influence or modify whether a document is in draft or published**. It only tracks the values of a separate "metadata" document. In this implementation, an "Approved" document could be a draft but will still need publishing. "Approving" the document deletes the "metadata" and so removes it from the "Workflow" process. You choose if Publishing the document happens in the Studio like normal, using the [Scheduled Publishing plugin](https://www.sanity.io/plugins/scheduled-publishing) or the [Scheduling API](https://www.sanity.io/docs/scheduling-api#fa3bb95f83ed).
+
+This plugin is considered finished in its current form. Your feedback for workflow features you would like to see in Sanity Studio would be appreciated and can be [shared in our Slack community](https://slack.sanity.io/).
+
+![Screenshot 2023-03-21 at 12 11 24](https://user-images.githubusercontent.com/9684022/226602179-5bd3d91a-9c27-431e-be18-3c70f06c6ccb.png)
 
 ## Features
 
@@ -16,13 +24,13 @@ This work demonstrates how a single plugin can define:
 ## Installation
 
 ```
-npm install --save sanity-plugin-workflow@beta
+npm install --save sanity-plugin-workflow
 ```
 
 or
 
 ```
-yarn add sanity-plugin-workflow@beta
+yarn add sanity-plugin-workflow
 ```
 
 ## Usage
@@ -41,7 +49,7 @@ Add it as a plugin in sanity.config.ts (or .js):
             // schemaTypes: ['article', 'product'],
             schemaTypes: [],
             // Optional, see below
-            states: [],
+            // states: [],
          })
      ]
  })
@@ -49,9 +57,9 @@ Add it as a plugin in sanity.config.ts (or .js):
 
 ## Configuring "States"
 
-The plugin comes with a default set of "States". These are tracked by the plugin creating a separate "metadata" document for each document that has begun the Workflow. 
+The plugin comes with a default set of "States". These are tracked by the plugin creating a separate "metadata" document for each document that has begun the Workflow.
 
-Documents can be promoted and demoted in the Workflow with the provided Document Actions as well as a drag-and-drop custom Tool. The settings below are not enforced by the API, custom access control rules could be used to do so. 
+Documents can be promoted and demoted in the Workflow with the provided Document Actions as well as a drag-and-drop custom Tool. The settings below are not enforced by the API, custom access control rules could be used to do so.
 
 ```ts
 {
@@ -61,10 +69,13 @@ Documents can be promoted and demoted in the Workflow with the provided Document
     // Optional settings:
     // Used for the color of the Document Badge
     color: 'success',
-    // Will enable document actions and drag-and-drop for only users with these Role
+    // Will limit document actions and drag-and-drop for only users with these Role
     roles: ['publisher', 'administrator'],
     // Requires the user to be "assigned" in order to update to this State
     requireAssignment: true,
+    // Requires the document to be valid before being promoted out of this State
+    // Warning: With many documents in the Kanban view this can negatively impact performance
+    requireValidation: true,
     // Defines which States a document can be moved to from this one
     transitions: ['changesRequested', 'approved']
 }
@@ -88,10 +99,12 @@ Once the Workflow is complete, the metadata can be removed by using the "Complet
 
 This plugin is largely based on the original Workflow Demo built into a Sanity Studio v2 project. The major differences are:
 
-* This plugin can be more easily installed and configured, not just code examples built into a Studio project
-* Documents must "opt-in" to and removed from the Workflow, in the previous version all documents were in the workflow which would fill up the interface
-* User Roles and Assignments can affect the Workflow. Set rules to enforce which States documents can move between and if being assigned to a document is required to move it to a new State
-* Ability to filter Schema types and assigned Users
+- This plugin is not concerned with nor will modify whether a document is in draft or published.
+- This plugin can be more easily installed and configured.
+- Documents must "opt-in" to and be removed from the Workflow. In the previous version, all documents were in the workflow which would fill up the interface and negatively affect performance.
+- Document validation status can be used as a way to prevent movement through the workflow.
+- User Roles and Assignments can affect the Workflow. Set rules to enforce which States documents can move between and if being assigned to a document is required to move it to a new State. These are only enforced in the Studio and not the API.
+- This plugin can filter Schema types and assigned Users.
 
 ## License
 

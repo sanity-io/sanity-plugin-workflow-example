@@ -1,11 +1,13 @@
 import {PublishIcon} from '@sanity/icons'
 import {PreviewValue, SanityDocument} from '@sanity/types'
 import {Box, Text, Tooltip} from '@sanity/ui'
-
-import {TimeAgo} from './TimeAgo'
 import {TextWithTone} from 'sanity'
 
-export function PublishedStatus(props: {document?: PreviewValue | Partial<SanityDocument> | null}) {
+import {TimeAgo} from './TimeAgo'
+
+export function PublishedStatus(props: {
+  document?: PreviewValue | Partial<SanityDocument> | null
+}) {
   const {document} = props
   const updatedAt = document && '_updatedAt' in document && document._updatedAt
 
@@ -24,7 +26,12 @@ export function PublishedStatus(props: {document?: PreviewValue | Partial<Sanity
         </Box>
       }
     >
-      <TextWithTone tone="positive" dimmed={!document} muted={!document} size={1}>
+      <TextWithTone
+        tone="positive"
+        dimmed={!document}
+        muted={!document}
+        size={1}
+      >
         <PublishIcon />
       </TextWithTone>
     </Tooltip>

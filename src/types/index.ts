@@ -1,14 +1,12 @@
 import {SanityDocumentLike} from 'sanity'
 
-// export type Operation = 'publish' | 'unpublish'
-
 export type State = {
   id: string
   transitions: string[]
   title: string
-  // operation?: Operation
   roles?: string[]
   requireAssignment?: boolean
+  requireValidation?: boolean
   // From document badges
   color?: 'primary' | 'success' | 'warning' | 'danger'
 }
@@ -59,8 +57,10 @@ export type Metadata = SanityDocumentLike & {
   assignees: string[]
   documentId: string
   state: string
-  order: number
+  orderRank: string
 }
+
+export type KeyedMetadata = {[key: string]: Metadata}
 
 export type SanityDocumentWithMetadata = {
   _metadata: Metadata

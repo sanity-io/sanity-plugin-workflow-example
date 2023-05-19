@@ -1,20 +1,20 @@
-import React from 'react'
-import {useListeningQuery} from 'sanity-plugin-utils'
+import {DraggableLocation} from '@hello-pangea/dnd'
 import {useToast} from '@sanity/ui'
-import {useClient} from 'sanity'
-import {DraggableLocation} from 'react-beautiful-dnd'
 import groq from 'groq'
+import React from 'react'
+import {useClient} from 'sanity'
+import {useListeningQuery} from 'sanity-plugin-utils'
 
-import {SanityDocumentWithMetadata, State} from '../types'
 import {API_VERSION} from '../constants'
+import {SanityDocumentWithMetadata, State} from '../types'
 
-const QUERY = groq`*[_type == "workflow.metadata"]{
+const QUERY = groq`*[_type == "workflow.metadata"]|order(orderRank){
   "_metadata": {
     _rev,
     assignees,
     documentId,
     state,
-    order
+    orderRank
   },
   ...(
     *[_id in [^.documentId, "drafts." + ^.documentId]]|order(_updatedAt)[0]{ 
@@ -30,14 +30,14 @@ type WorkflowDocuments = {
   workflowData: {
     data: SanityDocumentWithMetadata[]
     loading: boolean
-    error: boolean
+    error: boolean | unknown | ProgressEvent
   }
   operations: {
     move: (
       draggedId: string,
       destination: DraggableLocation,
       states: State[],
-      newOrder: number
+      newOrder: string
     ) => void
   }
 }
@@ -47,12 +47,16 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
   const client = useClient({apiVersion: API_VERSION})
 
   // Get and listen to changes on documents + workflow metadata documents
-  const {data, loading, error} = useListeningQuery<SanityDocumentWithMetadata[]>(QUERY, {
+  const {data, loading, error} = useListeningQuery<
+    SanityDocumentWithMetadata[]
+  >(QUERY, {
     params: {schemaTypes},
     initialValue: [],
   })
 
-  const [localDocuments, setLocalDocuments] = React.useState<SanityDocumentWithMetadata[]>([])
+  const [localDocuments, setLocalDocuments] = React.useState<
+    SanityDocumentWithMetadata[]
+  >([])
 
   React.useEffect(() => {
     if (data) {
@@ -61,7 +65,12 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
   }, [data])
 
   const move = React.useCallback(
-    (draggedId: string, destination: DraggableLocation, states: State[], newOrder: number) => {
+    async (
+      draggedId: string,
+      destination: DraggableLocation,
+      states: State[],
+      newOrder: string
+    ) => {
       // Optimistic update
       const currentLocalData = localDocuments
       const newLocalDocuments = localDocuments.map((item) => {
@@ -71,8 +80,8 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
             _metadata: {
               ...item._metadata,
               state: destination.droppableId,
-              order: newOrder,
-              // This never should be written to the document
+              orderRank: newOrder,
+              // This value won't be written to the document
               // It's done so that un/publish operations don't happen twice
               // Because a moved document's card will update once optimistically
               // and then again when the document is updated
@@ -89,7 +98,9 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
       // Now client-side update
       const newStateId = destination.droppableId
       const newState = states.find((s) => s.id === newStateId)
-      const document = localDocuments.find((d) => d?._metadata?.documentId === draggedId)
+      const document = localDocuments.find(
+        (d) => d?._metadata?.documentId === draggedId
+      )
 
       if (!newState?.id) {
         toast.push({
@@ -111,35 +122,39 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
       const {_id, _type} = document
 
       // Metadata + useDocumentOperation always uses Published id
-      const {_rev, documentId} = document._metadata || {}
+      const {documentId, _rev} = document._metadata || {}
 
-      client
+      await client
         .patch(`workflow-metadata.${documentId}`)
-        .ifRevisionId(_rev as string)
-        .set({state: newStateId, order: newOrder})
+        .ifRevisionId(_rev)
+        .set({state: newStateId, orderRank: newOrder})
         .commit()
-        .then(() => {
-          return toast.push({
-            title: `Moved to "${newState?.title ?? newStateId}"`,
-            description: documentId,
+        .then((res) => {
+          toast.push({
+            title:
+              newState.id === document._metadata.state
+                ? `Reordered in "${newState?.title ?? newStateId}"`
+                : `Moved to "${newState?.title ?? newStateId}"`,
             status: 'success',
           })
+          return res
         })
-        .catch(() => {
+        .catch((err) => {
           // Revert optimistic update
           setLocalDocuments(currentLocalData)
 
-          return toast.push({
+          toast.push({
             title: `Failed to move to "${newState?.title ?? newStateId}"`,
-            description: documentId,
+            description: err.message,
             status: 'error',
           })
+          return null
         })
 
       // Send back to the workflow board so a document update can happen
       return {_id, _type, documentId, state: newState as State}
     },
-    [client, toast, localDocuments, data]
+    [client, toast, localDocuments]
   )
 
   return {

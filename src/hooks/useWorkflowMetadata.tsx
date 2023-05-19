@@ -1,40 +1,49 @@
+import {useMemo} from 'react'
 import {useListeningQuery} from 'sanity-plugin-utils'
 
-import {Metadata, State} from '../types'
+import {API_VERSION} from '../constants'
+import {KeyedMetadata, Metadata} from '../types'
 
 /**
- * Takes the published ID of a document and return the metadata and current state object
+ * Takes the published ID of documents and return the metadata for those documents.
  *
- * @param id Source document published ID
- * @param states Array of States defined in plugin config
- * @returns State
+ * @param ids Source document published IDs
  */
-export function useWorkflowMetadata(
-  id: string,
-  states: State[]
-): {
-  data: {metadata?: Metadata; state?: State}
+export function useWorkflowMetadata(ids: string[]): {
+  data: KeyedMetadata
   loading: boolean
-  error: boolean
+  error: boolean | unknown | ProgressEvent
 } {
   const {
-    data: metadata,
+    data: rawData,
     loading,
     error,
-  } = useListeningQuery<Metadata>(`*[_type == "workflow.metadata" && documentId == $id][0]`, {
-    params: {id},
-  })
-
-  if (metadata?.state) {
-    return {
-      data: {
-        metadata,
-        state: states.find((s) => s.id === metadata.state),
-      },
-      loading,
-      error,
+  } = useListeningQuery<Metadata[]>(
+    `*[_type == "workflow.metadata" && documentId in $ids]{
+      _id,
+      _type,
+      _rev,
+      assignees,
+      documentId,
+      state,
+      orderRank
+    }`,
+    {
+      params: {ids},
+      options: {apiVersion: API_VERSION},
     }
-  }
+  )
 
-  return {data: {}, loading, error}
+  const keyedMetadata = useMemo(() => {
+    if (!rawData || rawData.length === 0) return {}
+
+    return rawData.reduce<KeyedMetadata>((acc, cur) => {
+      return {
+        ...acc,
+        [cur.documentId]: cur,
+      }
+    }, {})
+  }, [rawData])
+
+  return {data: keyedMetadata, loading, error}
 }
