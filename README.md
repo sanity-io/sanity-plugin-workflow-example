@@ -8,7 +8,7 @@ This plugin is distributed as an **example implementation** of customization API
 
 An intentional design choice of this plugin is that it **does not influence or modify whether a document is in draft or published**. It only tracks the values of a separate "metadata" document. In this implementation, an "Approved" document could be a draft but will still need publishing. "Approving" the document deletes the "metadata" and so removes it from the "Workflow" process. You choose if Publishing the document happens in the Studio like normal, using the [Scheduled Publishing plugin](https://www.sanity.io/plugins/scheduled-publishing) or the [Scheduling API](https://www.sanity.io/docs/scheduling-api#fa3bb95f83ed).
 
-This plugin is also considered feature complete and likely only to be supported for bug fixes and maintenance. Your feedback for workflow features you would like to see in Sanity Studio would be appreciated and can be [shared in our Slack community](https://slack.sanity.io/).
+This plugin is considered finished in its current form. Your feedback for workflow features you would like to see in Sanity Studio would be appreciated and can be [shared in our Slack community](https://slack.sanity.io/).
 
 ![Screenshot 2023-03-21 at 12 11 24](https://user-images.githubusercontent.com/9684022/226602179-5bd3d91a-9c27-431e-be18-3c70f06c6ccb.png)
 
