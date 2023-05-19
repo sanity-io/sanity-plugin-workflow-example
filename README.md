@@ -4,7 +4,7 @@
 
 With Sanity Studio you can [customize your content tools to support arbitrary workflows like assignment and content pipelines](https://www.sanity.io/docs/custom-workflows).
 
-This plugin is distributed as a **reference implementation** of these customization APIs and is not considered to be a feature-complete implementation of what workflow management requires in production. It is a starting point intended to be forked and customized to the needs of your organization and content creators.
+This plugin is distributed as an **example implementation** of customization APIs in the Sanity Studio V3 and is not considered to be a feature-complete implementation of what workflow management requires in production. It is meant as a starting point intended to be forked and customized to the needs of your organization and content creators, or simply as an illustration of what is possible in Sanity Studio V3.
 
 An intentional design choice of this plugin is that it **does not influence or modify whether a document is in draft or published**. It only tracks the values of a separate "metadata" document. In this implementation, an "Approved" document could be a draft but will still need publishing. "Approving" the document deletes the "metadata" and so removes it from the "Workflow" process. You choose if Publishing the document happens in the Studio like normal, using the [Scheduled Publishing plugin](https://www.sanity.io/plugins/scheduled-publishing) or the [Scheduling API](https://www.sanity.io/docs/scheduling-api#fa3bb95f83ed).
 
