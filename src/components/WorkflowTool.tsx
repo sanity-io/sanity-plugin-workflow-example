@@ -155,10 +155,8 @@ export default function WorkflowTool(props: WorkflowToolProps) {
           // Only the first state should generate an absolute minimum rank
           newOrder = LexoRank.min().toString()
         } else {
-          // Otherwise create the next rank between min and the globally minimum rank
-          newOrder = LexoRank.parse(globalStateMinimumRank)
-            .between(LexoRank.min())
-            .toString()
+          // Otherwise create one rank above the minimum
+          newOrder = LexoRank.min().genNext().toString()
         }
       } else if (destination.index === 0) {
         // Now first item in order
