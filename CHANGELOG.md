@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.1](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0...v1.0.1) (2023-06-13)
+
+### Bug Fixes
+
+- new order for empty state lists ([529128e](https://github.com/sanity-io/sanity-plugin-workflow/commit/529128e397497459522837d72983bdc86856d514))
+- update utils plugin ([02fe24b](https://github.com/sanity-io/sanity-plugin-workflow/commit/02fe24b9c1579b18e0a86bf79ea7c4c9b79cdcc3))
+
 ## 1.0.0 (2023-05-19)
 
 ### Features
