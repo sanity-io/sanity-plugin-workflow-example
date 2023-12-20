@@ -14,10 +14,13 @@ const QUERY = groq`*[_type == "workflow.metadata"]|order(orderRank){
     assignees,
     documentId,
     state,
-    orderRank
-  },
+    orderRank,
+    "draftDocumentId": "drafts." + documentId,
+  }
+}{
+  ...,
   ...(
-    *[_id in [^.documentId, "drafts." + ^.documentId]]|order(_updatedAt)[0]{ 
+    *[_id == ^._metadata.documentId || _id == ^._metadata.draftDocumentId]|order(_updatedAt)[0]{ 
       _id, 
       _type, 
       _rev, 
