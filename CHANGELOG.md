@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.2](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.1...v1.0.2) (2023-12-20)
+
+### Bug Fixes
+
+- workflow document query performance ([ff4a0ab](https://github.com/sanity-io/sanity-plugin-workflow/commit/ff4a0abd7e42708dc95bf153bdbad5f231d5ddb4))
+
 ## [1.0.1](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.0...v1.0.1) (2023-06-13)
 
 ### Bug Fixes
