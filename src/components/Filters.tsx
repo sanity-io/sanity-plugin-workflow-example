@@ -69,6 +69,8 @@ export default function Filters(props: FiltersProps) {
               <MenuButton
                 button={
                   <Button
+                    padding={3}
+                    fontSize={1}
                     text="Filter Assignees"
                     tone="primary"
                     icon={UserIcon}
@@ -129,6 +131,8 @@ export default function Filters(props: FiltersProps) {
 
               {selectedUserIds.length > 0 ? (
                 <Button
+                  padding={3}
+                  fontSize={1}
                   text="Clear"
                   onClick={resetSelectedUsers}
                   mode="ghost"
@@ -150,6 +154,8 @@ export default function Filters(props: FiltersProps) {
 
               return (
                 <Button
+                  padding={3}
+                  fontSize={1}
                   key={typeName}
                   text={schemaType?.title ?? typeName}
                   icon={schemaType?.icon ?? undefined}

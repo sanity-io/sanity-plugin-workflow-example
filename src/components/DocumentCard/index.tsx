@@ -133,8 +133,7 @@ export function DocumentCard(props: DocumentCardProps) {
             <Card
               borderBottom
               radius={2}
-              padding={3}
-              paddingLeft={2}
+              paddingRight={2}
               tone={cardTone}
               style={{pointerEvents: 'none'}}
             >
