@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.4](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.3...v1.0.4) (2024-03-14)
+
+### Bug Fixes
+
+- update styled-component dependencies ([23b373d](https://github.com/sanity-io/sanity-plugin-workflow/commit/23b373d86e9ab226c2b1d0d22c2b6669c0c697ad))
+
 ## [1.0.3](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.2...v1.0.3) (2024-01-25)
 
 ### Bug Fixes
