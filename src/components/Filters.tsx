@@ -1,6 +1,16 @@
-import {ResetIcon, UserIcon} from '@sanity/icons'
-import {Button, Card, Flex, Menu, MenuButton} from '@sanity/ui'
-import {useCallback} from 'react'
+import {FilterIcon, ResetIcon, UserIcon} from '@sanity/icons'
+import {
+  Box,
+  Button,
+  Card,
+  Checkbox,
+  Flex,
+  Menu,
+  MenuButton,
+  Popover,
+  Text,
+} from '@sanity/ui'
+import {useCallback, useState} from 'react'
 import {useCurrentUser, UserAvatar, useSchema} from 'sanity'
 import {UserExtended, UserSelectMenu} from 'sanity-plugin-utils'
 
@@ -27,6 +37,8 @@ export default function Filters(props: FiltersProps) {
 
   const currentUser = useCurrentUser()
   const schema = useSchema()
+
+  const [filtersOpen, toggleFilters] = useState(false)
 
   const onAdd = useCallback(
     (id: string) => {
@@ -63,7 +75,7 @@ export default function Filters(props: FiltersProps) {
   return (
     <Card tone="primary" padding={2} borderBottom style={{overflowX: 'hidden'}}>
       <Flex align="center">
-        <Flex align="center" gap={1} flex={1}>
+        <Flex align="center" gap={1} flex={1} direction="column">
           {uniqueAssignedUsers.length > 5 ? (
             <Card tone="default">
               <MenuButton
@@ -144,29 +156,50 @@ export default function Filters(props: FiltersProps) {
         </Flex>
 
         {schemaTypes.length > 1 ? (
-          <Flex align="center" gap={1}>
-            {schemaTypes.map((typeName) => {
-              const schemaType = schema.get(typeName)
+          <Popover
+            content={
+              <Flex gap={1}>
+                {schemaTypes.map((typeName) => {
+                  const schemaType = schema.get(typeName)
 
-              if (!schemaType) {
-                return null
-              }
-
-              return (
-                <Button
-                  padding={3}
-                  fontSize={1}
-                  key={typeName}
-                  text={schemaType?.title ?? typeName}
-                  icon={schemaType?.icon ?? undefined}
-                  mode={
-                    selectedSchemaTypes.includes(typeName) ? `default` : `ghost`
+                  if (!schemaType) {
+                    return null
                   }
-                  onClick={() => toggleSelectedSchemaType(typeName)}
-                />
-              )
-            })}
-          </Flex>
+
+                  return (
+                    <Flex align="center" key={typeName}>
+                      <Checkbox
+                        id={typeName}
+                        style={{display: 'block'}}
+                        onClick={() => toggleSelectedSchemaType(typeName)}
+                        checked={selectedSchemaTypes.includes(typeName)}
+                      />
+                      <Box flex={1} paddingLeft={3}>
+                        <Text>
+                          <label htmlFor={typeName}>
+                            {/* {schemaType?.icon ?? ''} */}
+                            {schemaType?.title ?? typeName}
+                          </label>
+                        </Text>
+                      </Box>
+                    </Flex>
+                  )
+                })}
+              </Flex>
+            }
+            padding={4}
+            placement="top"
+            portal
+            open={filtersOpen}
+          >
+            <Button
+              mode="ghost"
+              padding={[3, 3, 4]}
+              text="Filter"
+              icon={FilterIcon}
+              onClick={() => toggleFilters(!filtersOpen)}
+            />
+          </Popover>
         ) : null}
       </Flex>
     </Card>
