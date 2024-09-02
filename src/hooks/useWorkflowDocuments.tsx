@@ -59,7 +59,7 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
   const {data, loading, error} = useListeningQuery<
     SanityDocumentWithMetadata[]
   >(QUERY, {
-    params: {schemaTypes, locale: 'en-US'},
+    params: {schemaTypes},
     initialValue: [],
   })
 
