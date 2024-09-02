@@ -1,11 +1,12 @@
-import {SplitVerticalIcon} from '@sanity/icons'
-import {useToast} from '@sanity/ui'
-import {LexoRank} from 'lexorank'
-import {useCallback, useState} from 'react'
-import {DocumentActionProps, useClient} from 'sanity'
+import { LexoRank } from 'lexorank'
+import { useCallback, useState } from 'react'
+import { DocumentActionProps, useClient } from 'sanity'
 
-import {useWorkflowContext} from '../components/WorkflowContext'
-import {API_VERSION} from '../constants'
+import { SplitVerticalIcon } from '@sanity/icons'
+import { useToast } from '@sanity/ui'
+
+import { useWorkflowContext } from '../components/WorkflowContext'
+import { API_VERSION } from '../constants'
 
 export function BeginWorkflow(props: DocumentActionProps) {
   const {id, draft} = props
@@ -21,10 +22,12 @@ export function BeginWorkflow(props: DocumentActionProps) {
 
   const handle = useCallback(async () => {
     setBeginning(true)
+
     const lowestOrderFirstState = await client.fetch(
       `*[_type == "workflow.metadata" && state == $state]|order(orderRank)[0].orderRank`,
       {state: states[0].id}
     )
+
     client
       .createIfNotExists({
         _id: `workflow-metadata.${id}`,
@@ -34,6 +37,7 @@ export function BeginWorkflow(props: DocumentActionProps) {
         orderRank: lowestOrderFirstState
           ? LexoRank.parse(lowestOrderFirstState).genNext().toString()
           : LexoRank.min().toString(),
+        locale: draft?.locale,
       })
       .then(() => {
         toast.push({

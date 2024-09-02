@@ -1,33 +1,13 @@
-import {DraggableLocation} from '@hello-pangea/dnd'
-import {useToast} from '@sanity/ui'
 import groq from 'groq'
-import React from 'react'
-import {useClient} from 'sanity'
-import {useListeningQuery} from 'sanity-plugin-utils'
+import React, { useEffect } from 'react'
+import { useClient, useCurrentLocale, useCurrentUser } from 'sanity'
+import { useListeningQuery } from 'sanity-plugin-utils'
 
-import {API_VERSION} from '../constants'
-import {SanityDocumentWithMetadata, State} from '../types'
+import { DraggableLocation } from '@hello-pangea/dnd'
+import { useToast } from '@sanity/ui'
 
-const QUERY = groq`*[_type == "workflow.metadata"]|order(orderRank){
-  "_metadata": {
-    _rev,
-    assignees,
-    documentId,
-    state,
-    orderRank,
-    "draftDocumentId": "drafts." + documentId,
-  }
-}{
-  ...,
-  ...(
-    *[_id == ^._metadata.documentId || _id == ^._metadata.draftDocumentId]|order(_updatedAt)[0]{ 
-      _id, 
-      _type, 
-      _rev, 
-      _updatedAt 
-    }
-  )
-}`
+import { API_VERSION } from '../constants'
+import { SanityDocumentWithMetadata, State } from '../types'
 
 type WorkflowDocuments = {
   workflowData: {
@@ -49,11 +29,37 @@ export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
   const toast = useToast()
   const client = useClient({apiVersion: API_VERSION})
 
+  const user = useCurrentUser()
+  const locales = ['en-AU'] // TODO extract locales from user
+
+  const QUERY = groq`*[_type == "workflow.metadata" && locale in ${JSON.stringify(
+    locales
+  )}]|order(orderRank){
+    "_metadata": {
+      _rev,
+      assignees,
+      documentId,
+      state,
+      orderRank,
+      "draftDocumentId": "drafts." + documentId,
+    }
+  }{
+    ...,
+    ...(
+      *[_id == ^._metadata.documentId || _id == ^._metadata.draftDocumentId]|order(_updatedAt)[0]{ 
+        _id, 
+        _type, 
+        _rev, 
+        _updatedAt 
+      }
+    )
+  }`
+
   // Get and listen to changes on documents + workflow metadata documents
   const {data, loading, error} = useListeningQuery<
     SanityDocumentWithMetadata[]
   >(QUERY, {
-    params: {schemaTypes},
+    params: {schemaTypes, locale: 'en-US'},
     initialValue: [],
   })
 

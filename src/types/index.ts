@@ -1,4 +1,4 @@
-import {SanityDocumentLike} from 'sanity'
+import { SanityDocumentLike } from 'sanity'
 
 export type State = {
   id: string
@@ -58,6 +58,7 @@ export type Metadata = SanityDocumentLike & {
   documentId: string
   state: string
   orderRank: string
+  locale: string
 }
 
 export type KeyedMetadata = {[key: string]: Metadata}
