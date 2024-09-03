@@ -63,6 +63,7 @@ export function WorkflowProvider(props: WorkflowProviderProps) {
         removeId,
         states: props.workflow.states,
         schemaTypes: props.workflow.schemaTypes,
+        filters: props.workflow.filters,
       }}
     >
       {props.renderDefault(props)}

@@ -1,13 +1,12 @@
+import {DraggableLocation} from '@hello-pangea/dnd'
+import {useToast} from '@sanity/ui'
 import groq from 'groq'
-import React, { useEffect } from 'react'
-import { useClient, useCurrentLocale, useCurrentUser } from 'sanity'
-import { useListeningQuery } from 'sanity-plugin-utils'
+import React from 'react'
+import {useClient} from 'sanity'
+import {useListeningQuery} from 'sanity-plugin-utils'
 
-import { DraggableLocation } from '@hello-pangea/dnd'
-import { useToast } from '@sanity/ui'
-
-import { API_VERSION } from '../constants'
-import { SanityDocumentWithMetadata, State } from '../types'
+import {API_VERSION} from '../constants'
+import {SanityDocumentWithMetadata, State} from '../types'
 
 type WorkflowDocuments = {
   workflowData: {
@@ -25,16 +24,16 @@ type WorkflowDocuments = {
   }
 }
 
-export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
+export function useWorkflowDocuments(
+  schemaTypes: string[],
+  filtered?: string
+): WorkflowDocuments {
   const toast = useToast()
   const client = useClient({apiVersion: API_VERSION})
 
-  const user = useCurrentUser()
-  const locales = ['en-AU'] // TODO extract locales from user
+  const localeFilter = filtered ?? ''
 
-  const QUERY = groq`*[_type == "workflow.metadata" && locale in ${JSON.stringify(
-    locales
-  )}]|order(orderRank){
+  const QUERY = groq`*[_type == "workflow.metadata" ${localeFilter}]|order(orderRank){
     "_metadata": {
       _rev,
       assignees,

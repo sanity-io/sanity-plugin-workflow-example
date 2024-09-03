@@ -1,4 +1,4 @@
-import { SanityDocumentLike } from 'sanity'
+import {CurrentUser, SanityDocumentLike} from 'sanity'
 
 export type State = {
   id: string
@@ -20,6 +20,7 @@ export type StateCheck<Id, States> = {
 export type WorkflowConfig = {
   schemaTypes: string[]
   states?: State[]
+  filters?: (user: CurrentUser | null) => string
 }
 
 export function defineStates<

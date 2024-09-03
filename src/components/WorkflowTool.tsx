@@ -36,7 +36,11 @@ type WorkflowToolProps = {
 }
 
 export default function WorkflowTool(props: WorkflowToolProps) {
-  const {schemaTypes = [], states = []} = props?.tool?.options ?? {}
+  const {
+    schemaTypes = [],
+    states = [],
+    filters = null,
+  } = props?.tool?.options ?? {}
 
   const isDarkMode = useTheme().sanity.color.dark
   const defaultCardTone = isDarkMode ? 'default' : 'transparent'
@@ -49,7 +53,9 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     ? user?.roles.map((r) => r.name)
     : []
 
-  const {workflowData, operations} = useWorkflowDocuments(schemaTypes)
+  const filtered = filters?.(user)
+
+  const {workflowData, operations} = useWorkflowDocuments(schemaTypes, filtered)
   const [patchingIds, setPatchingIds] = React.useState<string[]>([])
 
   // Data to display in cards

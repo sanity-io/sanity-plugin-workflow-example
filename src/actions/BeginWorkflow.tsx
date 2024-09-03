@@ -1,12 +1,11 @@
-import { LexoRank } from 'lexorank'
-import { useCallback, useState } from 'react'
-import { DocumentActionProps, useClient } from 'sanity'
+import {SplitVerticalIcon} from '@sanity/icons'
+import {useToast} from '@sanity/ui'
+import {LexoRank} from 'lexorank'
+import {useCallback, useState} from 'react'
+import {DocumentActionProps, useClient} from 'sanity'
 
-import { SplitVerticalIcon } from '@sanity/icons'
-import { useToast } from '@sanity/ui'
-
-import { useWorkflowContext } from '../components/WorkflowContext'
-import { API_VERSION } from '../constants'
+import {useWorkflowContext} from '../components/WorkflowContext'
+import {API_VERSION} from '../constants'
 
 export function BeginWorkflow(props: DocumentActionProps) {
   const {id, draft} = props
