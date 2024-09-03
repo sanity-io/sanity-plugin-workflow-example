@@ -17,10 +17,14 @@ export type StateCheck<Id, States> = {
   transitions?: States extends {id: infer Id2}[] ? Id2[] : never
 } & State
 
+export type FilterOptions = {
+  locales: string[]
+}
+
 export type WorkflowConfig = {
   schemaTypes: string[]
   states?: State[]
-  filters?: (user: CurrentUser | null) => string
+  filters?: (user: CurrentUser | null) => FilterOptions | undefined
 }
 
 export function defineStates<

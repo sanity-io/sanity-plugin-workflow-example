@@ -53,9 +53,12 @@ export default function WorkflowTool(props: WorkflowToolProps) {
     ? user?.roles.map((r) => r.name)
     : []
 
-  const filtered = filters?.(user)
+  const filterOptions = filters?.(user)
 
-  const {workflowData, operations} = useWorkflowDocuments(schemaTypes, filtered)
+  const {workflowData, operations} = useWorkflowDocuments(
+    schemaTypes,
+    filterOptions
+  )
   const [patchingIds, setPatchingIds] = React.useState<string[]>([])
 
   // Data to display in cards

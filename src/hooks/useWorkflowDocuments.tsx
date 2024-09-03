@@ -6,7 +6,7 @@ import {useClient} from 'sanity'
 import {useListeningQuery} from 'sanity-plugin-utils'
 
 import {API_VERSION} from '../constants'
-import {SanityDocumentWithMetadata, State} from '../types'
+import {FilterOptions, SanityDocumentWithMetadata, State} from '../types'
 
 type WorkflowDocuments = {
   workflowData: {
@@ -26,12 +26,14 @@ type WorkflowDocuments = {
 
 export function useWorkflowDocuments(
   schemaTypes: string[],
-  filtered?: string
+  filterOptions?: FilterOptions
 ): WorkflowDocuments {
   const toast = useToast()
   const client = useClient({apiVersion: API_VERSION})
 
-  const localeFilter = filtered ?? ''
+  const localeFilter = filterOptions?.locales
+    ? `&& locale in ${JSON.stringify(filterOptions.locales)}`
+    : ''
 
   const QUERY = groq`*[_type == "workflow.metadata" ${localeFilter}]|order(orderRank){
     "_metadata": {
