@@ -48,7 +48,7 @@ export function BeginWorkflow(props: DocumentActionProps) {
         // Optimistically remove action
         setComplete(true)
       })
-  }, [id, states, client, toast])
+  }, [id, states, client, toast, draft])
 
   if (!draft || complete || metadata) {
     return null
