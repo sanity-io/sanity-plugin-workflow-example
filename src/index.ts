@@ -93,7 +93,7 @@ export const workflow = definePlugin<WorkflowConfig>(
       },
       tools: [
         // TODO: These configs could be read from Context
-        workflowTool({schemaTypes, states}),
+        workflowTool({schemaTypes, states, filters}),
       ],
     }
   }
