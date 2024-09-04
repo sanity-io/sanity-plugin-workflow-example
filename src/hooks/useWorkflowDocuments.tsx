@@ -32,7 +32,7 @@ export function useWorkflowDocuments(
   const client = useClient({apiVersion: API_VERSION})
 
   const localeFilter = filterOptions?.locales
-    ? `&& locale in ${JSON.stringify(filterOptions.locales)}`
+    ? `&& locale in ${JSON.stringify([...filterOptions.locales, null])}`
     : ''
 
   const QUERY = groq`*[_type == "workflow.metadata" ${localeFilter}]|order(orderRank){
