@@ -6,28 +6,7 @@ import {useClient} from 'sanity'
 import {useListeningQuery} from 'sanity-plugin-utils'
 
 import {API_VERSION} from '../constants'
-import {SanityDocumentWithMetadata, State} from '../types'
-
-const QUERY = groq`*[_type == "workflow.metadata"]|order(orderRank){
-  "_metadata": {
-    _rev,
-    assignees,
-    documentId,
-    state,
-    orderRank,
-    "draftDocumentId": "drafts." + documentId,
-  }
-}{
-  ...,
-  ...(
-    *[_id == ^._metadata.documentId || _id == ^._metadata.draftDocumentId]|order(_updatedAt)[0]{ 
-      _id, 
-      _type, 
-      _rev, 
-      _updatedAt 
-    }
-  )
-}`
+import {FilterOptions, SanityDocumentWithMetadata, State} from '../types'
 
 type WorkflowDocuments = {
   workflowData: {
@@ -45,9 +24,37 @@ type WorkflowDocuments = {
   }
 }
 
-export function useWorkflowDocuments(schemaTypes: string[]): WorkflowDocuments {
+export function useWorkflowDocuments(
+  schemaTypes: string[],
+  filterOptions?: FilterOptions
+): WorkflowDocuments {
   const toast = useToast()
   const client = useClient({apiVersion: API_VERSION})
+
+  const localeFilter = filterOptions?.locales
+    ? `&& locale in ${JSON.stringify([...filterOptions.locales, null])}`
+    : ''
+
+  const QUERY = groq`*[_type == "workflow.metadata" ${localeFilter}]|order(orderRank){
+    "_metadata": {
+      _rev,
+      assignees,
+      documentId,
+      state,
+      orderRank,
+      "draftDocumentId": "drafts." + documentId,
+    }
+  }{
+    ...,
+    ...(
+      *[_id == ^._metadata.documentId || _id == ^._metadata.draftDocumentId]|order(_updatedAt)[0]{ 
+        _id, 
+        _type, 
+        _rev, 
+        _updatedAt 
+      }
+    )
+  }`
 
   // Get and listen to changes on documents + workflow metadata documents
   const {data, loading, error} = useListeningQuery<

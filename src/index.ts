@@ -15,7 +15,7 @@ import {WorkflowConfig} from './types'
 
 export const workflow = definePlugin<WorkflowConfig>(
   (config = DEFAULT_CONFIG) => {
-    const {schemaTypes, states} = {...DEFAULT_CONFIG, ...config}
+    const {schemaTypes, states, filters} = {...DEFAULT_CONFIG, ...config}
 
     if (!states?.length) {
       throw new Error(`Workflow plugin: Missing "states" in config`)
@@ -35,7 +35,10 @@ export const workflow = definePlugin<WorkflowConfig>(
       studio: {
         components: {
           layout: (props) =>
-            WorkflowProvider({...props, workflow: {schemaTypes, states}}),
+            WorkflowProvider({
+              ...props,
+              workflow: {schemaTypes, states, filters},
+            }),
         },
       },
       form: {
@@ -90,7 +93,7 @@ export const workflow = definePlugin<WorkflowConfig>(
       },
       tools: [
         // TODO: These configs could be read from Context
-        workflowTool({schemaTypes, states}),
+        workflowTool({schemaTypes, states, filters}),
       ],
     }
   }
