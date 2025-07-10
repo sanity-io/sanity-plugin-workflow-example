@@ -1,6 +1,6 @@
 import {InfoOutlineIcon, UserIcon} from '@sanity/icons'
 import {Badge, BadgeTone, Box, Card, Flex, Text} from '@sanity/ui'
-import styled, {css} from 'styled-components'
+import {css, styled} from 'styled-components'
 
 import {State} from '../../types'
 import {Status} from './Status'
