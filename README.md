@@ -1,5 +1,3 @@
-> This is a **Sanity Studio v3** plugin.
-
 # Sanity Workflow Demo Plugin Example
 
 With Sanity Studio you can [customize your content tools to support arbitrary workflows like assignment and content pipelines](https://www.sanity.io/docs/custom-workflows).
