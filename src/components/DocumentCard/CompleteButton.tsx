@@ -3,6 +3,7 @@ import {Box, Button, Text, Tooltip, useToast} from '@sanity/ui'
 import React from 'react'
 import {useClient} from 'sanity'
 
+import {handleDeleteMetadata} from '../../actions/CompleteWorkflow'
 import {API_VERSION} from '../../constants'
 
 type CompleteButtonProps = {
@@ -24,20 +25,7 @@ export default function CompleteButton(props: CompleteButtonProps) {
           return
         }
 
-        client
-          .delete(`workflow-metadata.${id}`)
-          .then(() => {
-            toast.push({
-              status: 'success',
-              title: 'Workflow completed',
-            })
-          })
-          .catch(() => {
-            toast.push({
-              status: 'error',
-              title: 'Could not complete Workflow',
-            })
-          })
+        handleDeleteMetadata(client, toast, id)
       },
       [client, toast]
     )
