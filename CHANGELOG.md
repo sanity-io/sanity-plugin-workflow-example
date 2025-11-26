@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.6](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.5...v1.0.6) (2025-11-26)
+
+### Bug Fixes
+
+- added missing toast call for in-pane "complete workflow" document action ([#65](https://github.com/sanity-io/sanity-plugin-workflow/issues/65)) ([168eed7](https://github.com/sanity-io/sanity-plugin-workflow/commit/168eed74d587ad954455fab6036b2de9a284b5e1))
+
 ## [1.0.5](https://github.com/sanity-io/sanity-plugin-workflow/compare/v1.0.4...v1.0.5) (2025-07-10)
 
 ### Bug Fixes
